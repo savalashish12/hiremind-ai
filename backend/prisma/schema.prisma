@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  RECRUITER
+  CANDIDATE
+}
+
+enum JobType {
+  FULL_TIME
+  PART_TIME
+  INTERNSHIP
+  CONTRACT
+}
+
+model User {
+  id          String   @id @default(uuid())
+  fullName    String
+  email       String   @unique
+  password    String
+  role        Role
+  createdAt   DateTime @default(now())
+
+  candidateProfile CandidateProfile?
+  recruiterProfile RecruiterProfile?
+
+  jobs         Job[]
+  applications Application[]
+}
+
+model CandidateProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  skills      String[]
+  education   String?
+  experience  String?
+  resumeUrl   String?
+  professionalSummary String?
+  strengths String[]
+  weaknesses String[]
+  hiringRecommendation String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model RecruiterProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  companyName String
+  companyLogo String?
+  createdAt   DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Job {
+  id            String   @id @default(uuid())
+  title         String
+  description   String
+  location      String
+  salary        String?
+  jobType       JobType
+  skillsRequired String[]
+  createdAt     DateTime @default(now())
+
+  recruiterId String
+  recruiter   User @relation(fields: [recruiterId], references: [id])
+
+  applications Application[]
+}
+
+model Application {
+  id           String   @id @default(uuid())
+  candidateId  String
+  jobId        String
+
+  matchScore   Float?
+  aiFeedback   String?
+
+  status       String @default("APPLIED")
+
+  createdAt    DateTime @default(now())
+
+  candidate User @relation(fields: [candidateId], references: [id])
+
+  job Job @relation(fields: [jobId], references: [id])
+
+  @@unique([candidateId, jobId])
+}
