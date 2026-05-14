@@ -16,17 +16,18 @@ import {
 } from "react-router-dom";
 
 import API from "../services/api";
+import toast from "react-hot-toast";
 
-import CreateJobForm
-from "../components/CreateJobForm";
+import CreateJobForm from "../components/CreateJobForm";
+import EditJobModal from "../components/EditJobModal";
 
 const RecruiterDashboard = () => {
 
   const navigate =
     useNavigate();
 
-  const [jobs, setJobs] =
-    useState([]);
+  const [jobs, setJobs] = useState([]);
+  const [editingJob, setEditingJob] = useState(null);
 
   const [analytics,
     setAnalytics] =
@@ -76,12 +77,21 @@ const RecruiterDashboard = () => {
     };
 
   useEffect(() => {
-
     fetchRecruiterJobs();
-
     fetchAnalytics();
-
   }, []);
+
+  const deleteJob = async (jobId) => {
+    if (!window.confirm("Are you sure you want to delete this job?")) return;
+    try {
+      await API.delete(`/jobs/${jobId}`);
+      toast.success("Job deleted successfully");
+      fetchRecruiterJobs();
+      fetchAnalytics();
+    } catch (error) {
+      toast.error("Failed to delete job");
+    }
+  };
 
   const chartData = [
 
@@ -368,28 +378,62 @@ const RecruiterDashboard = () => {
 
             </div>
 
-            <button
-              onClick={() =>
-                navigate(
-                  `/applicants/${job.id}`
-                )
-              }
-              className="
-              bg-blue-600
-              px-5
-              py-2
-              rounded
-              mt-5
-              "
-            >
-              View Applicants
-            </button>
+            <div className="flex gap-3 mt-5">
+              <button
+                onClick={() =>
+                  navigate(
+                    `/applicants/${job.id}`
+                  )
+                }
+                className="
+                flex-1
+                bg-blue-600 hover:bg-blue-700 transition-colors
+                px-5
+                py-2
+                rounded
+                "
+              >
+                View Applicants
+              </button>
+
+              <button
+                onClick={() => setEditingJob(job)}
+                className="
+                bg-slate-600 hover:bg-slate-700 transition-colors
+                px-4
+                py-2
+                rounded
+                "
+              >
+                Edit
+              </button>
+
+              <button
+                onClick={() => deleteJob(job.id)}
+                className="
+                bg-red-600 hover:bg-red-700 transition-colors
+                px-4
+                py-2
+                rounded
+                "
+              >
+                Delete
+              </button>
+            </div>
 
           </div>
         ))}
 
       </div>
 
+      {editingJob && (
+        <EditJobModal
+          job={editingJob}
+          onClose={() => setEditingJob(null)}
+          fetchRecruiterJobs={fetchRecruiterJobs}
+          fetchAnalytics={fetchAnalytics}
+        />
+      )}
     </div>
   );
 };

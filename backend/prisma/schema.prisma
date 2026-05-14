@@ -38,6 +38,7 @@ model User {
 
   jobs         Job[]
   applications Application[]
+  savedJobs    SavedJob[]
 }
 
 model CandidateProfile {
@@ -51,6 +52,10 @@ model CandidateProfile {
   strengths String[]
   weaknesses String[]
   hiringRecommendation String?
+  linkedinUrl String?
+  githubUrl String?
+  portfolioUrl String?
+  profileImage String?
   createdAt   DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
@@ -61,6 +66,10 @@ model RecruiterProfile {
   userId      String   @unique
   companyName String
   companyLogo String?
+  companyWebsite String?
+  companyDescription String?
+  industry String?
+  companySize String?
   createdAt   DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
@@ -74,12 +83,14 @@ model Job {
   salary        String?
   jobType       JobType
   skillsRequired String[]
+  status        String @default("OPEN")
   createdAt     DateTime @default(now())
 
   recruiterId String
   recruiter   User @relation(fields: [recruiterId], references: [id])
 
   applications Application[]
+  savedJobs    SavedJob[]
 }
 
 model Application {
@@ -91,12 +102,30 @@ model Application {
   aiFeedback   String?
 
   status       String @default("APPLIED")
+  interviewDate DateTime?
+  interviewLink String?
 
   createdAt    DateTime @default(now())
 
   candidate User @relation(fields: [candidateId], references: [id])
+  job Job @relation(fields: [jobId], references: [id])
+  recruiterNotes String?
 
+  @@unique([candidateId, jobId])
+  @@index([candidateId])
+  @@index([jobId])
+  @@index([status])
+}
+
+model SavedJob {
+  id           String   @id @default(uuid())
+  candidateId  String
+  jobId        String
+  createdAt    DateTime @default(now())
+
+  candidate User @relation(fields: [candidateId], references: [id])
   job Job @relation(fields: [jobId], references: [id])
 
   @@unique([candidateId, jobId])
+  @@index([candidateId])
 }

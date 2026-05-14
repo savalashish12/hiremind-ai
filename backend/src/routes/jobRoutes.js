@@ -11,6 +11,8 @@ const {
   getJobApplicants,
   getRecruiterJobs,
   getRecruiterAnalytics,
+  updateJob,
+  deleteJob,
 } = require('../controllers/jobController');
 
 router.post(
@@ -48,6 +50,20 @@ router.get(
   protect,
   authorizeRoles('RECRUITER'),
   getJobApplicants
+);
+
+router.put(
+  '/:jobId',
+  protect,
+  authorizeRoles('RECRUITER'),
+  updateJob
+);
+
+router.delete(
+  '/:jobId',
+  protect,
+  authorizeRoles('RECRUITER'),
+  deleteJob
 );
 
 module.exports = router;

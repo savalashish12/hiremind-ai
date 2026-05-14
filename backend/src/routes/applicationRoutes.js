@@ -12,6 +12,7 @@ const {
   uploadResume,
   getMyApplications,
   updateApplicationStatus,
+  updateRecruiterNotes,
 } = require(
   "../controllers/applicationController"
 );
@@ -50,6 +51,13 @@ router.put(
   ),
 
   updateApplicationStatus
+);
+
+router.put(
+  "/:applicationId/notes",
+  protect,
+  authorizeRoles("RECRUITER"),
+  updateRecruiterNotes
 );
 
 module.exports = router;

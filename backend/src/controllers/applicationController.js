@@ -121,81 +121,51 @@ const uploadResume = async (req, res) => {
         filePath,
         {
           resource_type: "raw",
-          folder: "hiremind-resumes",
+
+          folder:
+            "hiremind-resumes",
+
+          use_filename: true,
+
+          unique_filename: true,
         }
       );
 
     const pdfBuffer = fs.readFileSync(filePath);
-
     const parsedPdf = await pdfParse(pdfBuffer);
 
-    const extractedData =
-      await extractResumeData(parsedPdf.text);
+    // Delete local temp file
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
 
-    const updatedProfile =
-      await prisma.candidateProfile.upsert({
+    const extractedData = await extractResumeData(parsedPdf.text);
 
-        where: {
-          userId: req.user.id,
-        },
+    const updatedProfile = await prisma.candidateProfile.upsert({
+      where: { userId: req.user.id },
+      update: {
+        resumeUrl: uploadedFile.secure_url,
+        skills: extractedData.skills,
+        education: extractedData.education,
+        experience: extractedData.experience,
+        professionalSummary: extractedData.professionalSummary,
+        strengths: extractedData.strengths,
+        weaknesses: extractedData.weaknesses,
+        hiringRecommendation: extractedData.hiringRecommendation,
+      },
+      create: {
+        userId: req.user.id,
+        resumeUrl: uploadedFile.secure_url,
+        skills: extractedData.skills,
+        education: extractedData.education,
+        experience: extractedData.experience,
+        professionalSummary: extractedData.professionalSummary,
+        strengths: extractedData.strengths,
+        weaknesses: extractedData.weaknesses,
+        hiringRecommendation: extractedData.hiringRecommendation,
+      },
+    });
 
-        update: {
-
-          resumeUrl:
-           uploadedFile.secure_url,
-
-          skills:
-            extractedData.skills,
-
-          education:
-            extractedData.education,
-
-          experience:
-            extractedData.experience,
-
-          professionalSummary:
-            extractedData.professionalSummary,
-
-          strengths:
-            extractedData.strengths,
-
-          weaknesses:
-            extractedData.weaknesses,
-
-          hiringRecommendation:
-            extractedData.hiringRecommendation,
-        },
-
-        create: {
-
-          userId: req.user.id,
-
-          resumeUrl:
-           uploadedFile.secure_url,
-
-          skills:
-            extractedData.skills,
-
-          education:
-            extractedData.education,
-
-          experience:
-            extractedData.experience,
-
-          professionalSummary:
-            extractedData.professionalSummary,
-
-          strengths:
-            extractedData.strengths,
-
-          weaknesses:
-            extractedData.weaknesses,
-
-          hiringRecommendation:
-            extractedData.hiringRecommendation,
-        },
-      });
-      
     res.status(200).json({
       message: 'Resume analyzed successfully',
       extractedData,
@@ -203,7 +173,9 @@ const uploadResume = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-
+    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
     res.status(500).json({
       message: error.message,
     });
@@ -318,9 +290,43 @@ const updateApplicationStatus =
     }
   };
 
+const updateRecruiterNotes = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const { notes } = req.body;
+
+    const application = await prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { job: true },
+    });
+
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+
+    if (application.job.recruiterId !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to update notes for this application" });
+    }
+
+    const updatedApplication = await prisma.application.update({
+      where: { id: applicationId },
+      data: { recruiterNotes: notes },
+    });
+
+    res.status(200).json({
+      message: "Notes updated successfully",
+      updatedApplication,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   applyToJob,
   uploadResume,
   getMyApplications,
   updateApplicationStatus,
+  updateRecruiterNotes,
 };

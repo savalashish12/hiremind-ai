@@ -214,6 +214,62 @@ async (req, res) => {
   }
 };
 
+const updateJob = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const updateData = req.body;
+
+    const job = await prisma.job.findUnique({ where: { id: jobId } });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    if (job.recruiterId !== req.user.id) {
+      return res.status(403).json({ message: "Unauthorized to update this job" });
+    }
+
+    const updatedJob = await prisma.job.update({
+      where: { id: jobId },
+      data: updateData,
+    });
+
+    res.status(200).json(updatedJob);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const deleteJob = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    const job = await prisma.job.findUnique({ where: { id: jobId } });
+
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    if (job.recruiterId !== req.user.id) {
+      return res.status(403).json({ message: "Unauthorized to delete this job" });
+    }
+
+    // Delete associated applications first
+    await prisma.application.deleteMany({
+      where: { jobId: jobId },
+    });
+
+    await prisma.job.delete({
+      where: { id: jobId },
+    });
+
+    res.status(200).json({ message: "Job deleted successfully" });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: error.message });
+  }
+};
 
 module.exports = {
   createJob,
@@ -221,4 +277,6 @@ module.exports = {
   getJobApplicants,
   getRecruiterJobs,
   getRecruiterAnalytics,
+  updateJob,
+  deleteJob,
 };

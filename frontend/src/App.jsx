@@ -15,6 +15,7 @@ import RecruiterDashboard from "./pages/RecruiterDashboard";
 import CandidateDashboard from "./pages/CandidateDashboard";
 import Jobs from "./pages/Jobs";
 import Applicants from "./pages/Applicants";
+import AdminDashboard from "./pages/AdminDashboard";
 
 function App() {
 
@@ -69,6 +70,14 @@ function App() {
           }
         />
 
+        <Route
+          path="/admin-dashboard"
+          element={
+            <ProtectedRoute role="ADMIN">
+              <AdminDashboard />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
 
     </BrowserRouter>

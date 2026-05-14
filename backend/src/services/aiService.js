@@ -83,25 +83,92 @@ ${resumeText}
       console.log(error);
 
       return {
-
         skills: [],
-
         education: "",
-
         experience: "",
-
         professionalSummary: "",
-
         strengths: [],
-
         weaknesses: [],
-
-        hiringRecommendation:
-          "AI analysis failed",
+        hiringRecommendation: "AI analysis failed",
       };
     }
   };
 
+const { GoogleGenAI } = require("@google/genai");
+
+const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+const generateInterviewQuestions = async (resumeText, skills, jobRole) => {
+  try {
+    const prompt = `
+You are an expert technical interviewer. Based on the following candidate details and the job role, generate an interview question guide.
+Job Role: ${jobRole}
+Candidate Skills: ${skills.join(", ")}
+Candidate Resume Snippet:
+${resumeText}
+
+Generate 3 technical questions, 2 HR questions, and 1 scenario question.
+Return ONLY valid JSON.
+Example format:
+{
+  "technical": ["Question 1", "Question 2", "Question 3"],
+  "hr": ["Question 1", "Question 2"],
+  "scenario": ["Question 1"]
+}
+`;
+    const response = await gemini.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+      }
+    });
+
+    return JSON.parse(response.text);
+  } catch (error) {
+    console.error("Gemini Error: ", error);
+    return { technical: [], hr: [], scenario: [] };
+  }
+};
+
+const compareCandidates = async (candidateA, candidateB, jobRole) => {
+  try {
+    const prompt = `
+You are a senior hiring manager. Compare Candidate A and Candidate B for the role of ${jobRole}.
+Candidate A:
+${JSON.stringify(candidateA)}
+
+Candidate B:
+${JSON.stringify(candidateB)}
+
+Return ONLY valid JSON with a detailed comparison and a final recommendation.
+Example format:
+{
+  "comparison": "Candidate A has more frontend experience, while Candidate B is stronger in backend...",
+  "strengthsA": ["React", "UI/UX"],
+  "strengthsB": ["Node", "SQL"],
+  "weaknessesA": ["Backend"],
+  "weaknessesB": ["Frontend"],
+  "recommendation": "Candidate A is better suited for this role because..."
+}
+`;
+    const response = await gemini.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+      }
+    });
+
+    return JSON.parse(response.text);
+  } catch (error) {
+    console.error("Gemini Error: ", error);
+    return { comparison: "Failed to generate", recommendation: "Failed to generate" };
+  }
+};
+
 module.exports = {
   extractResumeData,
+  generateInterviewQuestions,
+  compareCandidates,
 };
