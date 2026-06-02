@@ -15,16 +15,19 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  if (file.mimetype === 'application/pdf') {
+  const allowedMimes = ['application/pdf', 'text/plain'];
+  if (allowedMimes.includes(file.mimetype) || file.originalname.endsWith('.txt') || file.originalname.endsWith('.pdf')) {
     cb(null, true);
   } else {
-    cb(new Error('Only PDF files allowed'), false);
+    cb(new Error('Only PDF and TXT files are allowed'), false);
   }
 };
 
 const upload = multer({
   storage,
   fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
 });
+
 
 module.exports = upload;

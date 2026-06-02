@@ -31,14 +31,20 @@ model User {
   email       String   @unique
   password    String
   role        Role
+  isSuspended Boolean  @default(false)
   createdAt   DateTime @default(now())
 
   candidateProfile CandidateProfile?
   recruiterProfile RecruiterProfile?
+  companyProfile   CompanyProfile?
+  candidatePortfolio CandidatePortfolio?
+  mockInterviews   MockInterview[]
 
-  jobs         Job[]
-  applications Application[]
-  savedJobs    SavedJob[]
+  jobs             Job[]
+  applications     Application[]
+  savedJobs        SavedJob[]
+  notifications    Notification[]
+  companyDocuments CompanyDocument[]
 }
 
 model CandidateProfile {
@@ -56,6 +62,10 @@ model CandidateProfile {
   githubUrl String?
   portfolioUrl String?
   profileImage String?
+  certifications String[]
+  resumeHistory Json?
+  degreeUrl String?
+  certUrls  Json?
   createdAt   DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
@@ -102,14 +112,19 @@ model Application {
   aiFeedback   String?
 
   status       String @default("APPLIED")
+  pipelineStage String @default("Applied")
   interviewDate DateTime?
+  interviewTime String?
   interviewLink String?
+  interviewerNotes String?
 
   createdAt    DateTime @default(now())
 
   candidate User @relation(fields: [candidateId], references: [id])
   job Job @relation(fields: [jobId], references: [id])
   recruiterNotes String?
+  offerLetterUrl String?
+  offerLetterDetails Json?
 
   @@unique([candidateId, jobId])
   @@index([candidateId])
@@ -128,4 +143,103 @@ model SavedJob {
 
   @@unique([candidateId, jobId])
   @@index([candidateId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model CompanyDocument {
+  id          String   @id @default(uuid())
+  title       String
+  content     String
+  category    String   @default("GENERAL") // "JD", "POLICY", "GUIDELINE", "GENERAL"
+  createdAt   DateTime @default(now())
+  recruiterId String
+  recruiter   User     @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
+
+  @@index([recruiterId])
+}
+
+model MockInterview {
+  id                  String   @id @default(cuid())
+  candidateId         String
+  jobRole             String
+  questions           Json
+  answers             Json
+  communicationScore  Int
+  technicalScore      Int
+  confidenceScore     Int
+  overallRating       String
+  recommendation      String
+  createdAt           DateTime @default(now())
+  candidate           User     @relation(fields: [candidateId], references: [id])
+}
+
+model CompanyProfile {
+  id          String  @id @default(cuid())
+  recruiterId String  @unique
+  companyName String
+  logo        String?
+  website     String?
+  industry    String?
+  teamSize    String?
+  about       String?
+  location    String?
+  founded     String?
+  recruiter   User    @relation(fields: [recruiterId], references: [id])
+}
+
+model CandidatePortfolio {
+  id             String   @id @default(cuid())
+  candidateId    String   @unique
+  githubUrl      String?
+  linkedinUrl    String?
+  portfolioUrl   String?
+  projects       Json?
+  certifications Json?
+  achievements   Json?
+  candidate      User     @relation(fields: [candidateId], references: [id])
+}
+
+model ExternalJob {
+  id                 String   @id @default(uuid())
+  title              String
+  company            String
+  location           String
+  description        String
+  skills             String[]
+  salary             String?
+  applyUrl           String
+  source             String
+  sourceType         String   // "RSS", "WEB", "TELEGRAM"
+  postedDate         DateTime @default(now())
+  fetchedAt          DateTime @default(now())
+  isActive           Boolean  @default(true)
+
+  // Gemini AI enhanced fields
+  summary            String?
+  requiredSkills     String[]
+  experienceLevel    String?
+  category           String?
+
+  @@index([company])
+  @@index([location])
+  @@index([postedDate])
+}
+
+model ActivityLog {
+  id         String   @id @default(uuid())
+  action     String   // "JOB_CREATED", "JOB_UPDATED", "RESUME_UPLOADED", "APPLICATION_SUBMITTED", "INTERVIEW_SCHEDULED"
+  details    String
+  userId     String
+  createdAt  DateTime @default(now())
 }

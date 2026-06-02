@@ -100,6 +100,53 @@ HireMind AI
     }
   };
 
+const sendInterviewEmail = async (
+  candidateEmail,
+  candidateName,
+  jobTitle,
+  date,
+  time,
+  link,
+  notes
+) => {
+  try {
+    const formattedDate = new Date(date).toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    const subject = `Interview Scheduled: ${jobTitle}`;
+    const message = `
+Hello ${candidateName},
+
+We are pleased to invite you for an interview for the position of "${jobTitle}".
+
+Here are the details:
+Date: ${formattedDate}
+Time: ${time || "As scheduled"}
+Meeting Link: ${link}
+
+${notes ? `Interviewer Notes:\n${notes}\n` : ""}
+Best regards,
+HireMind AI Recruitment Team
+`;
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: candidateEmail,
+      subject,
+      text: message,
+    });
+
+    console.log("Interview invitation email sent successfully.");
+  } catch (error) {
+    console.log("Error sending interview email: ", error);
+  }
+};
+
 module.exports = {
   sendStatusEmail,
-};
+  sendInterviewEmail,
+};

@@ -13,6 +13,9 @@ const {
   getMyApplications,
   updateApplicationStatus,
   updateRecruiterNotes,
+  scheduleInterview,
+  generateOfferLetter,
+  downloadOfferLetter,
 } = require(
   "../controllers/applicationController"
 );
@@ -58,6 +61,26 @@ router.put(
   protect,
   authorizeRoles("RECRUITER"),
   updateRecruiterNotes
+);
+
+router.put(
+  "/:applicationId/interview",
+  protect,
+  authorizeRoles("RECRUITER"),
+  scheduleInterview
+);
+
+router.post(
+  "/:applicationId/offer-letter",
+  protect,
+  authorizeRoles("RECRUITER"),
+  generateOfferLetter
+);
+
+router.get(
+  "/:applicationId/offer-letter/download",
+  protect,
+  downloadOfferLetter
 );
 
 module.exports = router;

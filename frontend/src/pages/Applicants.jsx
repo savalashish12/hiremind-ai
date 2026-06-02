@@ -1,11 +1,5 @@
-import {
-  useEffect,
-  useState,
-} from "react";
-
-import {
-  useParams,
-} from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import API from "../services/api";
 
@@ -28,9 +22,9 @@ const RecruiterNotes = ({ application, fetchApplicants }) => {
 
   return (
     <div className="mt-5 bg-slate-900 p-4 rounded-xl border border-slate-700">
-      <h4 className="font-bold text-blue-300 mb-2">Private Recruiter Notes</h4>
+      <h4 className="font-bold text-blue-300 mb-2 text-sm">Private Recruiter Notes</h4>
       <textarea
-        className="w-full bg-slate-800 p-3 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+        className="w-full bg-slate-800 p-3 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         rows="3"
         value={notes}
         onChange={(e) => setNotes(e.target.value)}
@@ -39,7 +33,7 @@ const RecruiterNotes = ({ application, fetchApplicants }) => {
       <button
         onClick={handleSave}
         disabled={saving}
-        className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded mt-2 text-sm transition-colors"
+        className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded mt-2 text-xs font-semibold transition-colors"
       >
         {saving ? "Saving..." : "Save Notes"}
       </button>
@@ -67,41 +61,40 @@ const InterviewQuestions = ({ application }) => {
   return (
     <div className="mt-5 bg-slate-900 p-4 rounded-xl border border-slate-700">
       <div className="flex justify-between items-center mb-4">
-        <h4 className="font-bold text-purple-400 flex items-center gap-2">
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-          Gemini AI Interview Prep
+        <h4 className="font-bold text-purple-400 text-sm flex items-center gap-2">
+          ⚡ Gemini AI Interview Prep
         </h4>
         <button
           onClick={handleGenerate}
           disabled={loading}
-          className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded text-sm transition-colors flex items-center gap-2 disabled:opacity-50"
+          className="bg-purple-600 hover:bg-purple-700 px-4 py-1.5 rounded text-xs font-bold transition-colors disabled:opacity-50"
         >
           {loading ? "Generating..." : "Generate Guide"}
         </button>
       </div>
 
       {questions && (
-        <div className="space-y-4 animate-in fade-in duration-300">
+        <div className="space-y-4 animate-in fade-in duration-300 text-xs">
           {questions.technical?.length > 0 && (
             <div>
-              <h5 className="font-semibold text-blue-300 text-sm uppercase tracking-wider mb-2">Technical Questions</h5>
-              <ul className="list-disc ml-5 space-y-1 text-slate-300 text-sm">
+              <h5 className="font-semibold text-blue-300 uppercase tracking-wider mb-2">Technical Questions</h5>
+              <ul className="list-disc ml-5 space-y-1 text-slate-300">
                 {questions.technical.map((q, i) => <li key={i}>{q}</li>)}
               </ul>
             </div>
           )}
           {questions.hr?.length > 0 && (
             <div>
-              <h5 className="font-semibold text-green-300 text-sm uppercase tracking-wider mb-2">HR Questions</h5>
-              <ul className="list-disc ml-5 space-y-1 text-slate-300 text-sm">
+              <h5 className="font-semibold text-green-300 uppercase tracking-wider mb-2">HR Questions</h5>
+              <ul className="list-disc ml-5 space-y-1 text-slate-300">
                 {questions.hr.map((q, i) => <li key={i}>{q}</li>)}
               </ul>
             </div>
           )}
           {questions.scenario?.length > 0 && (
             <div>
-              <h5 className="font-semibold text-yellow-300 text-sm uppercase tracking-wider mb-2">Scenario</h5>
-              <ul className="list-disc ml-5 space-y-1 text-slate-300 text-sm">
+              <h5 className="font-semibold text-yellow-300 uppercase tracking-wider mb-2">Scenario</h5>
+              <ul className="list-disc ml-5 space-y-1 text-slate-300">
                 {questions.scenario.map((q, i) => <li key={i}>{q}</li>)}
               </ul>
             </div>
@@ -114,14 +107,21 @@ const InterviewQuestions = ({ application }) => {
 
 const ScheduleInterview = ({ application, fetchApplicants }) => {
   const [date, setDate] = useState(application.interviewDate ? application.interviewDate.slice(0, 16) : "");
+  const [time, setTime] = useState(application.interviewTime || "");
   const [link, setLink] = useState(application.interviewLink || "");
+  const [notes, setNotes] = useState(application.interviewerNotes || "");
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await API.put(`/application/${application.id}/interview`, { date: new Date(date).toISOString(), link });
-      toast.success("Interview scheduled successfully");
+      await API.put(`/application/${application.id}/interview`, {
+        interviewDate: new Date(date).toISOString(),
+        interviewTime: time,
+        interviewLink: link,
+        interviewerNotes: notes,
+      });
+      toast.success("Interview scheduled successfully!");
       fetchApplicants();
     } catch (error) {
       toast.error("Failed to schedule interview");
@@ -133,14 +133,13 @@ const ScheduleInterview = ({ application, fetchApplicants }) => {
   if (application.status !== "INTERVIEW_SCHEDULED") return null;
 
   return (
-    <div className="mt-5 bg-slate-900 p-4 rounded-xl border border-slate-700 animate-in fade-in duration-300">
-      <h4 className="font-bold text-teal-400 mb-4 flex items-center gap-2">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-        Schedule Interview
+    <div className="mt-5 bg-slate-900 p-4 rounded-xl border border-teal-500/30 animate-in fade-in duration-300 text-xs">
+      <h4 className="font-bold text-teal-400 mb-4 flex items-center gap-2 text-sm">
+        📅 Schedule Interview Link
       </h4>
       <div className="space-y-3">
         <div>
-          <label className="block text-slate-400 text-sm mb-1">Date & Time</label>
+          <label className="block text-slate-400 mb-1">Date</label>
           <input
             type="datetime-local"
             value={date}
@@ -149,7 +148,17 @@ const ScheduleInterview = ({ application, fetchApplicants }) => {
           />
         </div>
         <div>
-          <label className="block text-slate-400 text-sm mb-1">Meeting Link (e.g. Google Meet)</label>
+          <label className="block text-slate-400 mb-1">Time (e.g. 10:00 AM - 11:00 AM)</label>
+          <input
+            type="text"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            placeholder="e.g. 10:30 AM"
+            className="w-full bg-slate-800 p-2 rounded-lg text-white border border-slate-700 focus:border-teal-500 focus:outline-none"
+          />
+        </div>
+        <div>
+          <label className="block text-slate-400 mb-1">Meeting Link (e.g. Zoom, Google Meet)</label>
           <input
             type="url"
             value={link}
@@ -158,12 +167,22 @@ const ScheduleInterview = ({ application, fetchApplicants }) => {
             className="w-full bg-slate-800 p-2 rounded-lg text-white border border-slate-700 focus:border-teal-500 focus:outline-none"
           />
         </div>
+        <div>
+          <label className="block text-slate-400 mb-1">Interviewer Notes</label>
+          <input
+            type="text"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Bring portfolio links..."
+            className="w-full bg-slate-800 p-2 rounded-lg text-white border border-slate-700 focus:border-teal-500 focus:outline-none"
+          />
+        </div>
         <button
           onClick={handleSave}
-          disabled={saving || !date}
-          className="bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded text-sm transition-colors w-full disabled:opacity-50 mt-2"
+          disabled={saving || !date || !link}
+          className="bg-teal-600 hover:bg-teal-500 px-4 py-2 rounded text-white font-bold w-full transition-colors disabled:opacity-50 mt-2"
         >
-          {saving ? "Saving..." : "Save Schedule"}
+          {saving ? "Scheduling..." : "Send Invite & Schedule"}
         </button>
       </div>
     </div>
@@ -171,13 +190,59 @@ const ScheduleInterview = ({ application, fetchApplicants }) => {
 };
 
 const Applicants = () => {
-
-  const { jobId } =
-    useParams();
-
+  const { jobId } = useParams();
   const [applications, setApplications] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [minScore, setMinScore] = useState(0);
+
+  // Compare candidates state
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [comparisonResult, setComparisonResult] = useState(null);
+  const [loadingComparison, setLoadingComparison] = useState(false);
+  const [showCompareModal, setShowCompareModal] = useState(false);
+
+  // AI Candidate Ranking states
+  const [rankedCandidates, setRankedCandidates] = useState(null);
+  const [rankingLoading, setRankingLoading] = useState(false);
+  const [viewMode, setViewMode] = useState("standard"); // "standard" or "ai"
+  const [sortBy, setSortBy] = useState("score"); // "score", "date", "name"
+
+  // Offer Letter states
+  const [showOfferModal, setShowOfferModal] = useState(false);
+  const [selectedAppForOffer, setSelectedAppForOffer] = useState(null);
+  const [offerSalary, setOfferSalary] = useState("");
+  const [offerJoiningDate, setOfferJoiningDate] = useState("");
+  const [offerRole, setOfferRole] = useState("");
+  const [offerCompanyName, setOfferCompanyName] = useState("");
+  const [generatingOffer, setGeneratingOffer] = useState(false);
+
+  const handleGenerateOfferSubmit = async (e) => {
+    e.preventDefault();
+    if (!selectedAppForOffer) return;
+    setGeneratingOffer(true);
+    try {
+      const res = await API.post(`/application/${selectedAppForOffer.id}/offer-letter`, {
+        salary: offerSalary,
+        joiningDate: offerJoiningDate,
+        role: offerRole,
+        companyName: offerCompanyName,
+      });
+      if (res.data.application) {
+        toast.success("Offer Letter issued successfully!");
+        setShowOfferModal(false);
+        setSelectedAppForOffer(null);
+        setOfferSalary("");
+        setOfferJoiningDate("");
+        fetchApplicants();
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to generate and issue offer letter");
+    } finally {
+      setGeneratingOffer(false);
+    }
+  };
 
   const fetchApplicants = async () => {
     try {
@@ -191,10 +256,27 @@ const Applicants = () => {
   const updateStatus = async (applicationId, status) => {
     try {
       await API.put(`/application/${applicationId}/status`, { status });
-      toast.success(`Application ${status.toLowerCase()}`);
+      toast.success(`Application stage changed to ${status.toLowerCase()}`);
       fetchApplicants();
     } catch (error) {
       toast.error(error.response?.data?.message || "Something went wrong");
+    }
+  };
+
+  const handleAIRank = async () => {
+    setRankingLoading(true);
+    try {
+      const res = await API.post("/recruiter/rank-candidates", { jobId });
+      if (res.data.success) {
+        setRankedCandidates(res.data.data);
+        setViewMode("ai");
+        toast.success("Candidates ranked by Gemini AI!");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to rank candidates via AI");
+    } finally {
+      setRankingLoading(false);
     }
   };
 
@@ -209,284 +291,241 @@ const Applicants = () => {
       (app.candidate.candidateProfile?.skills || []).some(s => s.toLowerCase().includes(searchTerm.toLowerCase()));
     
     const matchesStatus = statusFilter === "ALL" || app.status === statusFilter;
+    const matchesScore = (app.matchScore || 0) >= minScore;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesStatus && matchesScore;
   });
+
+  const getSortedApplications = () => {
+    let list = [...filteredApplications];
+    if (sortBy === "score") {
+      list.sort((a, b) => (b.matchScore || 0) - (a.matchScore || 0));
+    } else if (sortBy === "date") {
+      list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    } else if (sortBy === "name") {
+      list.sort((a, b) => a.candidate.fullName.localeCompare(b.candidate.fullName));
+    }
+    return list;
+  };
+
+  const getSortedRanked = () => {
+    if (!rankedCandidates) return [];
+    let list = [...rankedCandidates];
+    if (sortBy === "score") {
+      list.sort((a, b) => b.fitScore - a.fitScore);
+    } else if (sortBy === "name") {
+      list.sort((a, b) => a.name.localeCompare(b.name));
+    }
+    return list;
+  };
+
+  // Checkbox select toggle
+  const handleSelectCandidate = (candidateId) => {
+    if (selectedIds.includes(candidateId)) {
+      setSelectedIds(prev => prev.filter(id => id !== candidateId));
+    } else {
+      if (selectedIds.length >= 2) {
+        toast.error("You can select maximum 2 candidates to compare.");
+        return;
+      }
+      setSelectedIds(prev => [...prev, candidateId]);
+    }
+  };
+
+  // AI comparison trigger
+  const runCandidateComparison = async () => {
+    if (selectedIds.length !== 2) {
+      toast.error("Please select exactly 2 candidates to compare.");
+      return;
+    }
+    setLoadingComparison(true);
+    setShowCompareModal(true);
+    try {
+      const res = await API.post("/ai/compare", {
+        candidateId1: selectedIds[0],
+        candidateId2: selectedIds[1],
+        jobId,
+      });
+      setComparisonResult(res.data);
+    } catch (err) {
+      toast.error("Failed to generate AI candidate comparison.");
+      setShowCompareModal(false);
+    } finally {
+      setLoadingComparison(false);
+    }
+  };
+
+  // Export CSV Action
+  const exportCSV = () => {
+    if (filteredApplications.length === 0) return toast.error("No applicants to export");
+    const headers = ["Candidate Name", "Email", "Match Score %", "Status", "Skills", "Applied Date"];
+    const rows = filteredApplications.map(app => [
+      app.candidate.fullName,
+      app.candidate.email,
+      app.matchScore || 0,
+      app.status,
+      (app.candidate.candidateProfile?.skills || []).join("; "),
+      new Date(app.createdAt).toLocaleDateString(),
+    ]);
+
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + [headers.join(","), ...rows.map(e => e.map(val => `"${val}"`).join(","))].join("\n");
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `applicants_job_${jobId}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("CSV file downloaded successfully!");
+  };
+
+  // Export Excel Action (TSV formatted as .xls for Excel loading)
+  const exportExcel = () => {
+    if (filteredApplications.length === 0) return toast.error("No applicants to export");
+    const headers = ["Candidate Name", "\tEmail", "\tMatch Score %", "\tStatus", "\tSkills", "\tApplied Date"];
+    const rows = filteredApplications.map(app => [
+      app.candidate.fullName,
+      `\t${app.candidate.email}`,
+      `\t${app.matchScore || 0}`,
+      `\t${app.status}`,
+      `\t${(app.candidate.candidateProfile?.skills || []).join("; ")}`,
+      `\t${new Date(app.createdAt).toLocaleDateString()}`,
+    ]);
+
+    const excelContent = [headers.join("\t"), ...rows.map(e => e.join("\t"))].join("\n");
+    const blob = new Blob([excelContent], { type: "application/vnd.ms-excel" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `applicants_job_${jobId}.xls`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Excel sheet downloaded successfully!");
+  };
+
+  const renderVisualMatchBar = (percentageStr) => {
+    const val = parseInt(percentageStr) || 50;
+    const blocksCount = Math.round(val / 8);
+    const filledBlocks = "█".repeat(blocksCount);
+    const emptyBlocks = "░".repeat(12 - blocksCount);
+    return `${filledBlocks}${emptyBlocks}`;
+  };
 
   return (
     <div className="p-10 max-w-7xl mx-auto">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
-        <h1 className="text-4xl font-bold text-white">Applicants</h1>
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-10 gap-6 border-b border-slate-700 pb-6">
+        <div>
+          <h1 className="text-4xl font-extrabold text-white">Candidates Pipelines</h1>
+          <p className="text-slate-400 text-sm mt-1">Review candidates matching scores, pipeline status stages, or run AI comparisons.</p>
+        </div>
         
-        <div className="flex flex-wrap gap-4">
-          <input
-            type="text"
-            placeholder="Search name, email, or skills..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-slate-800 text-white px-4 py-2 rounded-lg border border-slate-700 focus:outline-none focus:border-blue-500 w-64"
-          />
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="bg-slate-800 text-white px-4 py-2 rounded-lg border border-slate-700 focus:outline-none focus:border-blue-500"
+        <div className="flex flex-wrap gap-4 items-center w-full xl:w-auto">
+          {/* Kanban Board link */}
+          <a
+            href={`/recruiter/pipeline/${jobId}`}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-5 py-2.5 rounded-xl transition-all shadow text-sm"
           >
-            <option value="ALL">All Statuses</option>
-            <option value="APPLIED">Applied</option>
-            <option value="SHORTLISTED">Shortlisted</option>
-            <option value="REJECTED">Rejected</option>
-          </select>
+            📋 View Kanban Board
+          </a>
+
+          {/* AI Ranking Trigger */}
+          <button
+            onClick={handleAIRank}
+            disabled={rankingLoading || applications.length === 0}
+            className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-5 py-2.5 rounded-xl transition-all text-sm flex items-center gap-1.5"
+          >
+            {rankingLoading ? "Analyzing..." : "🤖 AI Rank Candidates"}
+          </button>
+
+          {/* AI Comparison Action */}
+          <button
+            onClick={runCandidateComparison}
+            disabled={selectedIds.length !== 2}
+            className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white font-bold px-5 py-2.5 rounded-xl transition-all text-sm"
+          >
+            👥 Compare Selected ({selectedIds.length}/2)
+          </button>
+          
+          <button onClick={exportCSV} className="bg-slate-700 hover:bg-slate-600 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-colors">
+            📥 CSV Export
+          </button>
+          <button onClick={exportExcel} className="bg-slate-700 hover:bg-slate-600 text-white font-bold px-4 py-2.5 rounded-xl text-sm transition-colors">
+            📊 Excel Export
+          </button>
         </div>
       </div>
 
-      {filteredApplications.length === 0 ? (
-        <div className="text-center py-20 text-slate-400">
-          <p className="text-xl">No applicants found matching your criteria.</p>
+      {rankingLoading && (
+        <div className="flex flex-col items-center justify-center py-20 bg-slate-800/40 border border-slate-700 rounded-3xl animate-pulse mb-10">
+          <div className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <p className="text-slate-300 font-medium">AI is analyzing candidate resumes and generating rankings...</p>
         </div>
-      ) : (
-      <div
-        className="
-        grid
-        md:grid-cols-2
-        gap-6
-        "
-      >
+      )}
 
-        {filteredApplications.map(
-          (application) => (
-
-            <div
-              key={application.id}
-              className="
-              bg-slate-800
-              p-6
-              rounded-xl
-              "
-            >
-
-              <h2
-                className="
-                text-2xl
-                font-bold
-                "
+      {/* Advanced Filters Dashboard */}
+      {!rankingLoading && (
+        <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 mb-10 space-y-6 text-sm">
+          <div className="flex justify-between items-center border-b border-slate-700 pb-3">
+            <div className="flex gap-4">
+              <button
+                onClick={() => setViewMode("standard")}
+                className={`font-semibold py-1 px-3 rounded-lg transition-all ${
+                  viewMode === "standard" ? "bg-slate-700 text-white" : "text-slate-400 hover:text-slate-200"
+                }`}
               >
-                {
-                  application
-                  .candidate
-                  .fullName
-                }
-              </h2>
-
-              <p className="mt-2">
-                {
-                  application
-                  .candidate
-                  .email
-                }
-              </p>
-
-              <p className="mt-4">
-                Match Score:
-
-                <span
-                  className="
-                  text-green-400
-                  font-bold
-                  "
+                Standard View
+              </button>
+              {rankedCandidates && (
+                <button
+                  onClick={() => setViewMode("ai")}
+                  className={`font-semibold py-1 px-3 rounded-lg transition-all ${
+                    viewMode === "ai" ? "bg-purple-900/50 text-purple-300 border border-purple-800/50" : "text-slate-400 hover:text-slate-200"
+                  }`}
                 >
-                  {" "}
-                  {
-                    application
-                    .matchScore
-                  }%
-                </span>
-              </p>
+                  🤖 Gemini AI Ranked
+                </button>
+              )}
+            </div>
 
-              <p className="mt-2">
-
-                {
-                  application
-                  .aiFeedback
-                }
-
-              </p>
-
-              <div
-                className="
-                bg-slate-900
-                p-4
-                rounded-xl
-                mt-5
-                "
+            {/* Sort Toggles */}
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400 font-medium text-xs uppercase tracking-wider">Sort by:</span>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="bg-slate-900 border border-slate-700 text-white rounded p-1.5 text-xs font-semibold focus:outline-none"
               >
+                <option value="score">AI Fit Score</option>
+                {viewMode === "standard" && <option value="date">Application Date</option>}
+                <option value="name">Name</option>
+              </select>
+            </div>
+          </div>
 
-                <h3
-                  className="
-                  text-xl
-                  font-bold
-                  mb-3
-                  text-blue-400
-                  "
-                >
-                  AI Evaluation
-                </h3>
-
-                <p className="mb-3">
-
-                  <span
-                    className="
-                    font-bold
-                    "
-                  >
-                    Summary:
-                  </span>
-
-                  {" "}
-
-                  {
-                    application
-                    .candidate
-                    .candidateProfile
-                    ?.professionalSummary
-                  }
-
-                </p>
-
-                <div className="mb-3">
-
-                  <h4
-                    className="
-                    font-bold
-                    text-green-400
-                    mb-2
-                    "
-                  >
-                    Strengths
-                  </h4>
-
-                  <ul
-                    className="
-                    list-disc
-                    ml-6
-                    "
-                  >
-
-                    {
-                      application
-                      .candidate
-                      .candidateProfile
-                      ?.strengths
-                      ?.map(
-                        (
-                          strength,
-                          index
-                        ) => (
-
-                          <li
-                            key={index}
-                          >
-                            {strength}
-                          </li>
-                        )
-                      )
-                    }
-
-                  </ul>
-
-                </div>
-
-                <div className="mb-3">
-
-                  <h4
-                    className="
-                    font-bold
-                    text-red-400
-                    mb-2
-                    "
-                  >
-                    Weaknesses
-                  </h4>
-
-                  <ul
-                    className="
-                    list-disc
-                    ml-6
-                    "
-                  >
-
-                    {
-                      application
-                      .candidate
-                      .candidateProfile
-                      ?.weaknesses
-                      ?.map(
-                        (
-                          weakness,
-                          index
-                        ) => (
-
-                          <li
-                            key={index}
-                          >
-                            {weakness}
-                          </li>
-                        )
-                      )
-                    }
-
-                  </ul>
-
-                </div>
-
-                <p
-                  className="
-                  mt-4
-                  text-yellow-300
-                  font-bold
-                  "
-                >
-
-                  Recommendation:
-
-                  {" "}
-
-                  {
-                    application
-                    .candidate
-                    .candidateProfile
-                    ?.hiringRecommendation
-                  }
-
-                </p>
-
+          {viewMode === "standard" && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Search Candidates</label>
+                <input
+                  type="text"
+                  placeholder="Search name, email, or skills..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500"
+                />
               </div>
 
-              <p className="mt-3">
-
-                Status:
-
-                <span
-                  className="
-                  font-bold
-                  text-yellow-400
-                  "
-                >
-                  {" "}
-                  {
-                    application
-                    .status
-                  }
-                </span>
-
-              </p>
-
-              <div className="flex flex-col gap-2 mt-5">
-                <label className="text-sm font-bold text-slate-400">Update Pipeline Status:</label>
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Pipeline Status</label>
                 <select
-                  value={application.status}
-                  onChange={(e) => updateStatus(application.id, e.target.value)}
-                  className="bg-slate-900 border border-slate-700 text-white px-4 py-2 rounded-lg focus:outline-none focus:border-blue-500 transition-colors"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500"
                 >
+                  <option value="ALL">All Stages</option>
                   <option value="APPLIED">Applied</option>
                   <option value="REVIEWING">Reviewing</option>
                   <option value="SHORTLISTED">Shortlisted</option>
@@ -498,89 +537,471 @@ const Applicants = () => {
                 </select>
               </div>
 
-              <RecruiterNotes application={application} fetchApplicants={fetchApplicants} />
-              
-              <ScheduleInterview application={application} fetchApplicants={fetchApplicants} />
+              <div>
+                <div className="flex justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                  <span>Min Match Score</span>
+                  <span className="text-blue-400">{minScore}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  value={minScore}
+                  onChange={(e) => setMinScore(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
-              <InterviewQuestions application={application} />
+      {/* Render Lists */}
+      {!rankingLoading && viewMode === "standard" && (
+        filteredApplications.length === 0 ? (
+          <div className="text-center py-20 bg-slate-800/40 rounded-2xl border border-slate-700 text-slate-400">
+            No applicants found matching the filters criteria.
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 gap-6">
+            {getSortedApplications().map((application) => {
+              const isSelected = selectedIds.includes(application.candidateId);
+              return (
+                <div
+                  key={application.id}
+                  className={`bg-slate-800 p-6 rounded-2xl border transition-all relative ${
+                    isSelected ? "border-purple-500 ring-2 ring-purple-950" : "border-slate-700 hover:border-slate-600"
+                  }`}
+                >
+                  {/* Compare Checkbox */}
+                  <div className="absolute top-6 right-6 flex items-center gap-2">
+                    <label className="text-xs text-slate-400 font-bold cursor-pointer" htmlFor={`check-${application.id}`}>
+                      Select
+                    </label>
+                    <input
+                      type="checkbox"
+                      id={`check-${application.id}`}
+                      checked={isSelected}
+                      onChange={() => handleSelectCandidate(application.candidateId)}
+                      className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 border-slate-700 bg-slate-900 cursor-pointer"
+                    />
+                  </div>
 
-              <div
-                className="
-                flex
-                flex-wrap
-                gap-2
-                mt-4
-                "
-              >
+                  <h2 className="text-2xl font-bold text-white mb-1 pr-16">{application.candidate.fullName}</h2>
+                  <p className="text-slate-400 text-sm mb-4">{application.candidate.email}</p>
 
-                {
-                  application
-                  .candidate
-                  .candidateProfile
-                  ?.skills
-                  ?.length > 0 ? (
+                  <div className="flex gap-4 text-sm mb-4">
+                    <span className="text-green-400 font-bold">🎯 Match Score: {application.matchScore || 0}%</span>
+                    <span className="text-slate-400">Stage: <strong className="text-yellow-500">{application.status}</strong></span>
+                  </div>
 
-                    application
-                    .candidate
-                    .candidateProfile
-                    ?.skills
-                    ?.map(
-                      (
-                        skill,
-                        index
-                      ) => (
-
-                        <span
-                          key={index}
-                          className="
-                          bg-blue-600
-                          px-3
-                          py-1
-                          rounded-full
-                          text-sm
-                          "
-                        >
-                          {skill}
-                        </span>
-                      )
-                    )
-
-                  ) : (
-
-                    <p>
-                      No resume skills found
+                  {application.aiFeedback && (
+                    <p className="text-slate-300 text-xs italic bg-slate-950/40 p-3 rounded-lg border border-slate-800 mb-6">
+                      " {application.aiFeedback} "
                     </p>
-                  )
-                }
+                  )}
 
+                  {/* Profile detail display */}
+                  <div className="bg-slate-900 p-4 rounded-xl border border-slate-850 space-y-4 mb-6 text-xs">
+                    <h3 className="font-bold text-blue-400 text-sm">Candidate AI Assessment</h3>
+                    {application.candidate.candidateProfile?.professionalSummary && (
+                      <p className="text-slate-300 leading-relaxed">
+                        <strong>Summary:</strong> {application.candidate.candidateProfile.professionalSummary}
+                      </p>
+                    )}
+                    {application.candidate.candidateProfile?.strengths?.length > 0 && (
+                      <div>
+                        <strong className="text-green-400 block mb-1">Strengths</strong>
+                        <ul className="list-disc ml-4 space-y-0.5 text-slate-400">
+                          {application.candidate.candidateProfile.strengths.map((s, i) => <li key={i}>{s}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                    {application.candidate.candidateProfile?.weaknesses?.length > 0 && (
+                      <div>
+                        <strong className="text-red-400 block mb-1">Weaknesses</strong>
+                        <ul className="list-disc ml-4 space-y-0.5 text-slate-400">
+                          {application.candidate.candidateProfile.weaknesses.map((w, i) => <li key={i}>{w}</li>)}
+                        </ul>
+                      </div>
+                    )}
+                    {application.candidate.candidateProfile?.hiringRecommendation && (
+                      <p className="text-yellow-400 font-bold border-t border-slate-800 pt-2 mt-2">
+                        💡 Rec: {application.candidate.candidateProfile.hiringRecommendation}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Verified Credentials */}
+                  <div className="bg-slate-900 p-4 rounded-xl border border-slate-850 space-y-4 mb-6 text-xs">
+                    <h3 className="font-bold text-emerald-400 text-sm flex items-center gap-1.5">
+                      🎓 Verified Educational Credentials
+                    </h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400 font-medium">Educational Degree:</span>
+                        {application.candidate.candidateProfile?.degreeUrl ? (
+                          <a
+                            href={application.candidate.candidateProfile.degreeUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-emerald-400 hover:text-emerald-300 font-bold underline"
+                          >
+                            View Degree PDF ↗
+                          </a>
+                        ) : (
+                          <span className="text-slate-600 font-medium italic">Not Uploaded</span>
+                        )}
+                      </div>
+
+                      <div>
+                        <span className="text-slate-400 font-medium block mb-1">Professional Certificates:</span>
+                        {(() => {
+                          const certs = application.candidate.candidateProfile?.certUrls;
+                          let parsedCerts = [];
+                          if (certs) {
+                            parsedCerts = Array.isArray(certs) 
+                              ? certs 
+                              : (typeof certs === 'string' ? JSON.parse(certs) : []);
+                          }
+                          if (parsedCerts.length === 0) {
+                            return <span className="text-slate-600 font-medium italic block">No certificates uploaded</span>;
+                          }
+                          return (
+                            <ul className="list-disc ml-4 space-y-1 text-slate-300">
+                              {parsedCerts.map((cert, idx) => (
+                                <li key={idx}>
+                                  <a
+                                    href={cert.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="hover:underline text-blue-400 font-semibold"
+                                  >
+                                    {cert.name || `Certificate ${idx + 1}`}
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Skills tags */}
+                  <div className="flex flex-wrap gap-1.5 mb-6">
+                    {(application.candidate.candidateProfile?.skills || []).map((skill, idx) => (
+                      <span key={idx} className="bg-blue-900/30 text-blue-300 border border-blue-800/20 px-2 py-0.5 rounded text-[10px] font-semibold">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="flex flex-col gap-2 mb-6 text-xs">
+                    <label className="font-bold text-slate-400">Update Application Stage:</label>
+                    <select
+                      value={application.status}
+                      onChange={(e) => updateStatus(application.id, e.target.value)}
+                      className="bg-slate-900 border border-slate-700 text-white px-4 py-2.5 rounded-lg focus:outline-none focus:border-blue-500"
+                    >
+                      <option value="APPLIED">Applied</option>
+                      <option value="REVIEWING">Reviewing</option>
+                      <option value="SHORTLISTED">Shortlisted</option>
+                      <option value="INTERVIEW_SCHEDULED">Interview Scheduled</option>
+                      <option value="INTERVIEWED">Interviewed</option>
+                      <option value="SELECTED">Selected</option>
+                      <option value="REJECTED">Rejected</option>
+                      <option value="HIRED">Hired</option>
+                    </select>
+                  </div>
+
+                  {/* Offer Letter Actions */}
+                  <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800/80 mb-6 text-xs space-y-3">
+                    <h4 className="font-bold text-blue-400 text-sm flex items-center gap-1.5">
+                      ✉️ Job Offer Letter
+                    </h4>
+                    {application.offerLetterUrl ? (
+                      <div className="space-y-2">
+                        <p className="text-slate-300">
+                          An offer letter has been generated for this candidate.
+                        </p>
+                        {application.offerLetterDetails && (
+                          <div className="text-[11px] text-slate-400 space-y-1 bg-slate-950/40 p-2.5 rounded-lg border border-slate-900">
+                            <p><strong>Role:</strong> {application.offerLetterDetails.role}</p>
+                            <p><strong>Salary:</strong> INR {application.offerLetterDetails.salary} P.A.</p>
+                            <p><strong>Joining Date:</strong> {new Date(application.offerLetterDetails.joiningDate).toLocaleDateString()}</p>
+                          </div>
+                        )}
+                        <a
+                          href={application.offerLetterUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="bg-blue-600/20 text-blue-400 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg font-bold transition-all text-center block"
+                        >
+                          View Generated Offer Letter PDF ↗
+                        </a>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => {
+                          setSelectedAppForOffer(application);
+                          setOfferRole(application.job.title);
+                          setOfferCompanyName(application.job.recruiter?.recruiterProfile?.companyName || "the Hiring Company");
+                          setShowOfferModal(true);
+                        }}
+                        className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded font-bold w-full transition-colors"
+                      >
+                        Generate Official Offer Letter PDF
+                      </button>
+                    )}
+                  </div>
+
+                  <RecruiterNotes application={application} fetchApplicants={fetchApplicants} />
+                  <ScheduleInterview application={application} fetchApplicants={fetchApplicants} />
+                  <InterviewQuestions application={application} />
+
+                  {application.candidate.candidateProfile?.resumeUrl && (
+                    <a
+                      href={application.candidate.candidateProfile.resumeUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-block text-center bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded-xl text-xs w-full transition-colors mt-6 shadow"
+                    >
+                      📄 View Candidate Resume
+                    </a>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )
+      )}
+
+      {/* Render AI Ranked list */}
+      {!rankingLoading && viewMode === "ai" && rankedCandidates && (
+        <div className="space-y-6">
+          {getSortedRanked().map((candidate, index) => (
+            <div key={candidate.candidateId} className="bg-slate-800 p-6 rounded-2xl border border-purple-800/40 hover:border-purple-600 shadow-xl transition-all duration-300 relative">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                <div>
+                  <h3 className="text-xl font-bold text-white">
+                    #{index + 1} {candidate.name}
+                  </h3>
+                  <p className="text-xs text-purple-400 font-semibold mt-1">Match Rating: {candidate.fitPercentage}</p>
+                </div>
+                
+                {/* Visual Progress Bar */}
+                <div className="text-xs font-mono text-purple-300 bg-slate-900 px-3 py-1.5 rounded-lg border border-purple-950">
+                  {renderVisualMatchBar(candidate.fitPercentage)} {candidate.fitScore}% Score
+                </div>
               </div>
 
-              {
-                application
-                .candidate
-                .candidateProfile
-                ?.resumeUrl && (
+              {/* Strengths & Concerns tags */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="bg-slate-900/40 p-4 rounded-xl border border-slate-850">
+                  <span className="text-[10px] font-bold text-green-400 uppercase tracking-wider block mb-2">Strengths</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {candidate.strengths?.map((str, idx) => (
+                      <span key={idx} className="bg-green-950/30 text-green-400 border border-green-900/20 px-2 py-0.5 rounded text-[10px] font-semibold">
+                        {str}
+                      </span>
+                    ))}
+                  </div>
+                </div>
 
-                  <a href={application.candidate.candidateProfile.resumeUrl} target="_blank" rel="noreferrer"
-                    className="
-                    inline-block
-                    bg-green-600
-                    px-5
-                    py-2
-                    rounded
-                    mt-5
-                    "
-                  >
-                    View Resume
-                  </a>
-                )
-              }
+                <div className="bg-slate-900/40 p-4 rounded-xl border border-slate-850">
+                  <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider block mb-2">Concerns</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {candidate.concerns?.map((con, idx) => (
+                      <span key={idx} className="bg-red-950/30 text-red-400 border border-red-900/20 px-2 py-0.5 rounded text-[10px] font-semibold">
+                        {con}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
 
+              {/* AI Recommendation text */}
+              <div className="bg-purple-950/10 p-4 rounded-xl border border-purple-900/20 text-xs leading-relaxed text-slate-300">
+                <strong>Gemini AI Evaluation:</strong> {candidate.recommendation}
+              </div>
             </div>
-          )
-        )}
+          ))}
+        </div>
+      )}
 
-      </div>
+      {/* Comparison Modal */}
+      {showCompareModal && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="flex justify-between items-center p-6 border-b border-slate-800 bg-slate-950">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                🤖 Gemini AI Candidate Comparison
+              </h3>
+              <button
+                onClick={() => {
+                  setShowCompareModal(false);
+                  setComparisonResult(null);
+                }}
+                className="text-slate-400 hover:text-white font-bold"
+              >
+                ✕ Close
+              </button>
+            </div>
+
+            <div className="flex-1 p-6 overflow-y-auto space-y-6">
+              {loadingComparison ? (
+                <div className="text-center py-20 space-y-4">
+                  <div className="w-10 h-10 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
+                  <p className="text-slate-400 text-sm">Gemini AI is analyzing resumes and comparing profiles side-by-side...</p>
+                </div>
+              ) : comparisonResult ? (
+                <div className="space-y-6 text-sm text-slate-300">
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                    <h4 className="font-bold text-purple-400 mb-2">Detailed Comparison Overview</h4>
+                    <p className="leading-relaxed">{comparisonResult.comparison}</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+                      <h4 className="font-bold text-white mb-3">Candidate A Highlights</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <strong className="text-green-400 text-xs uppercase block mb-1">Key Strengths</strong>
+                          <ul className="list-disc ml-4 space-y-0.5 text-xs text-slate-400">
+                            {(comparisonResult.strengthsA || []).map((s, idx) => <li key={idx}>{s}</li>)}
+                          </ul>
+                        </div>
+                        <div>
+                          <strong className="text-red-400 text-xs uppercase block mb-1">Weaknesses / Gaps</strong>
+                          <ul className="list-disc ml-4 space-y-0.5 text-xs text-slate-400">
+                            {(comparisonResult.weaknessesA || []).map((w, idx) => <li key={idx}>{w}</li>)}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-slate-800/60 p-4 rounded-xl border border-slate-700/50">
+                      <h4 className="font-bold text-white mb-3">Candidate B Highlights</h4>
+                      <div className="space-y-3">
+                        <div>
+                          <strong className="text-green-400 text-xs uppercase block mb-1">Key Strengths</strong>
+                          <ul className="list-disc ml-4 space-y-0.5 text-xs text-slate-400">
+                            {(comparisonResult.strengthsB || []).map((s, idx) => <li key={idx}>{s}</li>)}
+                          </ul>
+                        </div>
+                        <div>
+                          <strong className="text-red-400 text-xs uppercase block mb-1">Weaknesses / Gaps</strong>
+                          <ul className="list-disc ml-4 space-y-0.5 text-xs text-slate-400">
+                            {(comparisonResult.weaknessesB || []).map((w, idx) => <li key={idx}>{w}</li>)}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-purple-950/20 p-4 rounded-xl border border-purple-500/20 text-center">
+                    <h4 className="font-bold text-violet-400 mb-2">Final Hiring Recommendation</h4>
+                    <p className="text-violet-300 font-semibold">{comparisonResult.recommendation}</p>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-center text-slate-500">Failed to load comparison.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Offer Letter Generation Modal */}
+      {showOfferModal && selectedAppForOffer && (
+        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-6 animate-in fade-in duration-300">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 text-sm text-white">
+            <div className="flex justify-between items-center p-6 border-b border-slate-800 bg-slate-950">
+              <h3 className="text-lg font-bold text-white">
+                Generate Employment Offer Letter
+              </h3>
+              <button
+                onClick={() => {
+                  setShowOfferModal(false);
+                  setSelectedAppForOffer(null);
+                  setOfferSalary("");
+                  setOfferJoiningDate("");
+                }}
+                className="text-slate-400 hover:text-white font-bold"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <form onSubmit={handleGenerateOfferSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Candidate</label>
+                <input
+                  type="text"
+                  disabled
+                  value={selectedAppForOffer.candidate.fullName}
+                  className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-slate-400 font-bold focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Company Name</label>
+                <input
+                  type="text"
+                  required
+                  value={offerCompanyName}
+                  onChange={(e) => setOfferCompanyName(e.target.value)}
+                  placeholder="e.g. Acme Corporation"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500 animate-in"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Designation / Role</label>
+                <input
+                  type="text"
+                  required
+                  value={offerRole}
+                  onChange={(e) => setOfferRole(e.target.value)}
+                  placeholder="e.g. Software Engineer"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Annual CTC / Salary (INR)</label>
+                <input
+                  type="text"
+                  required
+                  value={offerSalary}
+                  onChange={(e) => setOfferSalary(e.target.value)}
+                  placeholder="e.g. 12,00,000"
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Expected Joining Date</label>
+                <input
+                  type="date"
+                  required
+                  value={offerJoiningDate}
+                  onChange={(e) => setOfferJoiningDate(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-white focus:outline-none focus:border-blue-500"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={generatingOffer}
+                className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold p-3 rounded-lg transition-all active:scale-95 text-xs flex items-center justify-center gap-1.5"
+              >
+                {generatingOffer ? "Compiling PDF & Uploading..." : "Generate & Issue Offer Letter"}
+              </button>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

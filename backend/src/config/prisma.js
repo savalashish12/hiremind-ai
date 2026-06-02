@@ -4,7 +4,7 @@ let prisma;
 
 if (process.env.NODE_ENV === 'production') {
   prisma = new PrismaClient({
-    log: ['error', 'warn'],
+    log: ['error'],
   });
 } else {
   if (!global.prisma) {
@@ -15,4 +15,11 @@ if (process.env.NODE_ENV === 'production') {
   prisma = global.prisma;
 }
 
-module.exports = prisma;
+// Clean up connections on process termination
+process.on('beforeExit', async () => {
+  if (prisma) {
+    await prisma.$disconnect();
+  }
+});
+
+module.exports = prisma;

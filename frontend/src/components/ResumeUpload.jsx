@@ -1,58 +1,38 @@
-import { useState }
-from "react";
-
+import { useState } from "react";
 import API from "../services/api";
+import toast from "react-hot-toast";
 
-const ResumeUpload = () => {
-
-  const [file, setFile] =
-    useState(null);
+const ResumeUpload = ({ fetchProfile }) => {
+  const [file, setFile] = useState(null);
 
   const handleUpload = async () => {
-
     if (!file) {
-      return alert(
-        "Select a PDF file"
-      );
+      return toast.error("Please select a PDF file");
     }
 
     try {
+      const formData = new FormData();
+      formData.append("resume", file);
 
-      const formData =
-        new FormData();
-
-      formData.append(
-        "resume",
-        file
+      const res = await API.post(
+        "/application/upload-resume",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
       );
 
-      const res =
-        await API.post(
-          "/application/upload-resume",
-          formData,
-          {
-            headers: {
-              "Content-Type":
-                "multipart/form-data",
-            },
-          }
-        );
-
-      alert(
-        "Resume uploaded successfully"
-      );
-
-      console.log(
-        res.data
-      );
-
+      toast.success("Resume uploaded successfully");
+      console.log(res.data);
+      
+      if (fetchProfile) {
+        fetchProfile();
+      }
     } catch (error) {
-
       console.log(error);
-
-      alert(
-        error.response.data.message
-      );
+      toast.error(error.response?.data?.message || "Failed to upload resume");
     }
   };
 

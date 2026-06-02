@@ -8,6 +8,7 @@ const authorizeRoles = require('../middleware/roleMiddleware');
 const {
   createJob,
   getAllJobs,
+  getExternalJobs,
   getJobApplicants,
   getRecruiterJobs,
   getRecruiterAnalytics,
@@ -22,6 +23,7 @@ router.post(
   createJob
 );
 
+router.get('/external', getExternalJobs);
 router.get('/', getAllJobs);
 
 router.get(

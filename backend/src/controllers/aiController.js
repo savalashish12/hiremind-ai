@@ -1,5 +1,14 @@
-const { generateInterviewQuestions, compareCandidates } = require("../services/aiService");
+const {
+  generateInterviewQuestions,
+  compareCandidates,
+  generateResumeSuggestions,
+  generateCareerRoadmap,
+  askKnowledgeBase,
+} = require("../services/aiService");
 const prisma = require("../config/prisma");
+const { calculateMatchScore } = require("../services/matchingService");
+const fs = require("fs");
+const pdfParse = require("pdf-parse");
 
 const getInterviewQuestions = async (req, res) => {
   try {
@@ -73,7 +82,218 @@ const compareTwoCandidates = async (req, res) => {
   }
 };
 
+const getResumeSuggestions = async (req, res) => {
+  try {
+    const candidateProfile = await prisma.candidateProfile.findUnique({
+      where: { userId: req.user.id },
+    });
+
+    if (!candidateProfile) {
+      return res.status(404).json({ message: "Candidate profile not found. Please upload a resume first." });
+    }
+
+    const resumeText = `
+Professional Summary: ${candidateProfile.professionalSummary || "No summary"}
+Experience: ${candidateProfile.experience || "No experience summary"}
+Education: ${candidateProfile.education || "No education details"}
+Strengths: ${(candidateProfile.strengths || []).join(", ")}
+Weaknesses: ${(candidateProfile.weaknesses || []).join(", ")}
+    `;
+
+    const suggestions = await generateResumeSuggestions(resumeText, candidateProfile.skills || []);
+    res.status(200).json(suggestions);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to generate resume suggestions" });
+  }
+};
+
+const getCareerRoadmap = async (req, res) => {
+  try {
+    const candidateProfile = await prisma.candidateProfile.findUnique({
+      where: { userId: req.user.id },
+    });
+
+    if (!candidateProfile) {
+      return res.status(404).json({ message: "Candidate profile not found. Please upload a resume first." });
+    }
+
+    const { targetRole } = req.query;
+
+    const roadmap = await generateCareerRoadmap(
+      candidateProfile.skills || [],
+      candidateProfile.experience || "Entry level",
+      targetRole
+    );
+
+    res.status(200).json(roadmap);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to generate career roadmap" });
+  }
+};
+
+const getAIJobRecommendations = async (req, res) => {
+  try {
+    const candidateProfile = await prisma.candidateProfile.findUnique({
+      where: { userId: req.user.id },
+    });
+
+    if (!candidateProfile) {
+      return res.status(404).json({ message: "Candidate profile not found. Please upload a resume first." });
+    }
+
+    const jobs = await prisma.job.findMany({
+      where: { status: "OPEN" },
+      include: { recruiter: { include: { recruiterProfile: true } } },
+    });
+
+    const recommendations = jobs.map((job) => {
+      const match = calculateMatchScore(
+        candidateProfile.skills,
+        job.skillsRequired,
+        candidateProfile.experience || "",
+        candidateProfile.education || ""
+      );
+
+      return {
+        ...job,
+        matchScore: match.score,
+        aiFeedback: match.feedback,
+      };
+    });
+
+    // Sort descending by matchScore
+    recommendations.sort((a, b) => b.matchScore - a.matchScore);
+
+    res.status(200).json(recommendations);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to fetch job recommendations" });
+  }
+};
+
+// RAG / Knowledge Assistant endpoints
+const uploadCompanyDocument = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "Please upload a document file (PDF or Text)" });
+    }
+
+    const filePath = req.file.path;
+    let parsedText = "";
+
+    if (req.file.mimetype === "application/pdf") {
+      const pdfBuffer = fs.readFileSync(filePath);
+      const parsedPdf = await pdfParse(pdfBuffer);
+      parsedText = parsedPdf.text;
+    } else {
+      // Treat as plain text
+      parsedText = fs.readFileSync(filePath, "utf-8");
+    }
+
+    // Clean up local temp file
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+
+    const { title, category } = req.body;
+
+    const doc = await prisma.companyDocument.create({
+      data: {
+        title: title || req.file.originalname,
+        category: category || "GENERAL",
+        content: parsedText,
+        recruiterId: req.user.id,
+      },
+    });
+
+    res.status(201).json({
+      message: "Document uploaded and parsed successfully",
+      document: doc,
+    });
+  } catch (error) {
+    console.error(error);
+    if (req.file && req.file.path && fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getCompanyDocuments = async (req, res) => {
+  try {
+    const documents = await prisma.companyDocument.findMany({
+      where: { recruiterId: req.user.id },
+      orderBy: { createdAt: "desc" },
+    });
+    res.status(200).json(documents);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const deleteCompanyDocument = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const document = await prisma.companyDocument.findUnique({
+      where: { id },
+    });
+
+    if (!document) {
+      return res.status(404).json({ message: "Document not found" });
+    }
+
+    if (document.recruiterId !== req.user.id) {
+      return res.status(403).json({ message: "Unauthorized to delete this document" });
+    }
+
+    await prisma.companyDocument.delete({
+      where: { id },
+    });
+
+    res.status(200).json({ message: "Document deleted successfully" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const askKnowledgeAssistant = async (req, res) => {
+  try {
+    const { question } = req.body;
+    if (!question) {
+      return res.status(400).json({ message: "Question is required" });
+    }
+
+    const documents = await prisma.companyDocument.findMany({
+      where: { recruiterId: req.user.id },
+    });
+
+    if (documents.length === 0) {
+      return res.status(400).json({
+        message: "No documents uploaded. Please upload company policies or guidelines first in the Knowledge Hub.",
+      });
+    }
+
+    const answer = await askKnowledgeBase(documents, question);
+    res.status(200).json({ answer });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Knowledge base query failed" });
+  }
+};
+
 module.exports = {
   getInterviewQuestions,
   compareTwoCandidates,
+  getResumeSuggestions,
+  getCareerRoadmap,
+  getAIJobRecommendations,
+  uploadCompanyDocument,
+  getCompanyDocuments,
+  deleteCompanyDocument,
+  askKnowledgeAssistant,
 };

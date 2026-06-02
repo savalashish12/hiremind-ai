@@ -32,12 +32,25 @@ app.use(
 
 const aiRoutes = require('./routes/aiRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const atsRoutes = require('./routes/atsRoutes');
+const skillsRoutes = require('./routes/skillsRoutes');
+const interviewRoutes = require('./routes/interviewRoutes');
+const candidateRoutes = require('./routes/candidateRoutes');
+const recruiterRoutes = require('./routes/recruiterRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/jobs', jobRoutes);
 app.use('/api/application', applicationRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/ats', atsRoutes);
+app.use('/api/skills', skillsRoutes);
+app.use('/api/interview', interviewRoutes);
+app.use('/api/candidate', candidateRoutes);
+app.use('/api/recruiter', recruiterRoutes);
+
 
 app.get('/', (req, res) => {
   res.send('HireMind AI Backend Running');

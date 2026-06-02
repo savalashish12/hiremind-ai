@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
+const prisma = require('../config/prisma');
 
-const protect = (req, res, next) => {
+const protect = async (req, res, next) => {
   try {
     const token = req.headers.authorization;
 
@@ -17,7 +18,23 @@ const protect = (req, res, next) => {
       process.env.JWT_SECRET
     );
 
-    req.user = decoded;
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.id },
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        message: 'User does not exist',
+      });
+    }
+
+    if (user.isSuspended) {
+      return res.status(403).json({
+        message: 'Your account has been suspended. Please contact the administrator.',
+      });
+    }
+
+    req.user = user;
 
     next();
   } catch (error) {
@@ -27,4 +44,4 @@ const protect = (req, res, next) => {
   }
 };
 
-module.exports = protect;
+module.exports = protect;

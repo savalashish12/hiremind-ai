@@ -40,6 +40,15 @@ const createJob = async (req, res) => {
         },
       });
 
+    // Create activity log
+    await prisma.activityLog.create({
+      data: {
+        action: "JOB_CREATED",
+        details: `Job "${title}" was created by recruiter "${req.user.fullName}"`,
+        userId: req.user.id,
+      },
+    });
+
     res.status(201).json(job);
 
   } catch (error) {
@@ -136,83 +145,125 @@ async (req, res) => {
   }
 };
 
-const getRecruiterAnalytics =
-async (req, res) => {
-
+const getRecruiterAnalytics = async (req, res) => {
   try {
-
-    const recruiterJobs =
-      await prisma.job.findMany({
-
-        where: {
-          recruiterId:
-            req.user.id,
+    const recruiterJobs = await prisma.job.findMany({
+      where: {
+        recruiterId: req.user.id,
+      },
+      include: {
+        applications: {
+          include: {
+            candidate: {
+              include: {
+                candidateProfile: true,
+              },
+            },
+          },
         },
-
-        include: {
-          applications: true,
-        },
-      });
-
-    const totalJobs =
-      recruiterJobs.length;
-
-    let totalApplications = 0;
-
-    let shortlistedCount = 0;
-
-    let rejectedCount = 0;
-
-    recruiterJobs.forEach(
-      (job) => {
-
-        totalApplications +=
-          job.applications.length;
-
-        job.applications.forEach(
-          (application) => {
-
-            if (
-              application.status ===
-              "SHORTLISTED"
-            ) {
-
-              shortlistedCount++;
-            }
-
-            if (
-              application.status ===
-              "REJECTED"
-            ) {
-
-              rejectedCount++;
-            }
-          }
-        );
-      }
-    );
-
-    res.status(200).json({
-
-      totalJobs,
-
-      totalApplications,
-
-      shortlistedCount,
-
-      rejectedCount,
+      },
     });
 
+    const totalJobs = recruiterJobs.length;
+    let totalApplications = 0;
+    let shortlistedCount = 0;
+    let rejectedCount = 0;
+
+    // Stage counts for hiring funnel
+    const stages = {
+      APPLIED: 0,
+      REVIEWING: 0,
+      SHORTLISTED: 0,
+      INTERVIEW_SCHEDULED: 0,
+      INTERVIEWED: 0,
+      SELECTED: 0,
+      REJECTED: 0,
+      HIRED: 0,
+    };
+
+    // Applications per month
+    const monthlyData = {};
+
+    // Skills tracker
+    const skillsMap = {};
+
+    let mostPopularJob = null;
+    let maxApplicants = 0;
+
+    recruiterJobs.forEach((job) => {
+      const appCount = job.applications.length;
+      totalApplications += appCount;
+
+      if (appCount > maxApplicants) {
+        maxApplicants = appCount;
+        mostPopularJob = { title: job.title, count: appCount };
+      }
+
+      job.applications.forEach((application) => {
+        const currentStatus = application.status || "APPLIED";
+        if (stages[currentStatus] !== undefined) {
+          stages[currentStatus]++;
+        }
+        if (currentStatus === "SHORTLISTED") {
+          shortlistedCount++;
+        }
+        if (currentStatus === "REJECTED") {
+          rejectedCount++;
+        }
+
+        // Parse creation month
+        const monthName = new Date(application.createdAt).toLocaleString("default", { month: "short" });
+        monthlyData[monthName] = (monthlyData[monthName] || 0) + 1;
+
+        // Skills parsing
+        const skills = application.candidate?.candidateProfile?.skills || [];
+        skills.forEach((skill) => {
+          const normSkill = skill.trim();
+          if (normSkill) {
+            skillsMap[normSkill] = (skillsMap[normSkill] || 0) + 1;
+          }
+        });
+      });
+    });
+
+    // Format monthly data
+    const monthNamesOrder = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const applicationsPerMonth = monthNamesOrder
+      .map((m) => ({
+        month: m,
+        count: monthlyData[m] || 0,
+      }));
+
+    // Format funnel data
+    const hiringFunnel = Object.keys(stages).map((stage) => ({
+      stage,
+      count: stages[stage],
+    }));
+
+    // Format top skills (top 8)
+    const topSkills = Object.keys(skillsMap)
+      .map((skill) => ({ skill, count: skillsMap[skill] }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
+
+    res.status(200).json({
+      totalJobs,
+      totalApplications,
+      shortlistedCount,
+      rejectedCount,
+      applicationsPerMonth,
+      hiringFunnel,
+      topSkills,
+      mostPopularJob: mostPopularJob || { title: "N/A", count: 0 },
+    });
   } catch (error) {
-
     console.log(error);
-
     res.status(500).json({
-      message:
-        error.message,
+      message: error.message,
     });
   }
 };
+
 
 const updateJob = async (req, res) => {
   try {
@@ -232,6 +283,15 @@ const updateJob = async (req, res) => {
     const updatedJob = await prisma.job.update({
       where: { id: jobId },
       data: updateData,
+    });
+
+    // Create activity log
+    await prisma.activityLog.create({
+      data: {
+        action: "JOB_UPDATED",
+        details: `Job "${updatedJob.title}" was updated by recruiter "${req.user.fullName}"`,
+        userId: req.user.id,
+      },
     });
 
     res.status(200).json(updatedJob);
@@ -271,9 +331,52 @@ const deleteJob = async (req, res) => {
   }
 };
 
+const getExternalJobs = async (req, res) => {
+  try {
+    const { search, location, category, experienceLevel, source } = req.query;
+
+    const where = { isActive: true };
+
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { company: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (location) {
+      where.location = { contains: location, mode: 'insensitive' };
+    }
+
+    if (category && category !== 'ALL') {
+      where.category = { equals: category };
+    }
+
+    if (experienceLevel && experienceLevel !== 'ALL') {
+      where.experienceLevel = { equals: experienceLevel };
+    }
+
+    if (source && source !== 'ALL') {
+      where.sourceType = { equals: source };
+    }
+
+    const jobs = await prisma.externalJob.findMany({
+      where,
+      orderBy: { postedDate: 'desc' },
+    });
+
+    res.status(200).json(jobs);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createJob,
   getAllJobs,
+  getExternalJobs,
   getJobApplicants,
   getRecruiterJobs,
   getRecruiterAnalytics,
