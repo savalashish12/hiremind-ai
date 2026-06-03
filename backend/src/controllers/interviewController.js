@@ -5,6 +5,18 @@ const {
   generateMcqQuestionsAI,
   evaluateMcqTestAI,
 } = require("../services/aiService");
+const questionBank = require("../data/questionBank");
+
+const mapCategoryToBankKey = (testType) => {
+  const t = testType.toLowerCase();
+  if (t.includes("aptitude") && !t.includes("quantitative")) return "Aptitude";
+  if (t.includes("cognitive") || t.includes("reasoning") || t.includes("behavioral")) return "Logical Reasoning";
+  if (t.includes("quantitative") || t.includes("quant")) return "Quantitative";
+  if (t.includes("verbal") || t.includes("communication") || t.includes("discussion")) return "Communication";
+  if (t.includes("programming") || t.includes("coding")) return "Coding Round";
+  if (t.includes("hr")) return "HR Questions";
+  return "Technical"; // fallback to Technical MCQ
+};
 
 const startInterview = async (req, res) => {
   try {
@@ -173,10 +185,47 @@ const generateMcqTest = async (req, res) => {
       });
     }
 
-    const questions = await generateMcqQuestionsAI(company, role, testType);
+    const bankKey = mapCategoryToBankKey(testType);
+    const baseQuestions = questionBank[bankKey] || questionBank["Technical"];
+
+    // Seed PRNG based on company + testType to yield repeatable company-specific questions
+    const seedString = `${company.toLowerCase()}-${testType.toLowerCase()}`;
+    let seed = 0;
+    for (let i = 0; i < seedString.length; i++) {
+      seed = (seed * 31 + seedString.charCodeAt(i)) & 0xffffffff;
+    }
+
+    const prng = () => {
+      seed = (1103515245 * seed + 12345) & 0xffffffff;
+      return (seed >>> 16) / 32768;
+    };
+
+    // Deep copy and shuffle
+    const clonedQuestions = JSON.parse(JSON.stringify(baseQuestions));
+    for (let i = clonedQuestions.length - 1; i > 0; i--) {
+      const j = Math.floor(prng() * (i + 1));
+      const temp = clonedQuestions[i];
+      clonedQuestions[i] = clonedQuestions[j];
+      clonedQuestions[j] = temp;
+    }
+
+    // Take exactly 25 questions
+    const selectedQuestions = clonedQuestions.slice(0, 25);
+
+    // Personalize questions to reference the company
+    const personalized = selectedQuestions.map((q, index) => {
+      q.id = index + 1;
+      if (index % 3 === 0) {
+        q.question = `At ${company}, ${q.question.charAt(0).toLowerCase() + q.question.slice(1)}`;
+      } else if (index % 3 === 1) {
+        q.question = `${q.question.replace(/\ba person\b/gi, `a team at ${company}`).replace(/\ba vendor\b/gi, `a procurement lead at ${company}`)}`;
+      }
+      return q;
+    });
+
     res.status(200).json({
       success: true,
-      data: questions,
+      data: personalized,
     });
   } catch (error) {
     console.error("MCQ generation controller error:", error);
@@ -189,7 +238,7 @@ const generateMcqTest = async (req, res) => {
 
 const evaluateMcqTest = async (req, res) => {
   try {
-    const { company, role, testType, questions, answers } = req.body;
+    const { company, role, testType, questions, answers, elapsedSeconds } = req.body;
     if (!company || !role || !testType || !questions || !answers) {
       return res.status(400).json({
         success: false,
@@ -214,6 +263,11 @@ const evaluateMcqTest = async (req, res) => {
 
     const total = questions.length;
     const scorePercentage = Math.round((correct / total) * 100);
+    const accuracy = total - unanswered > 0 ? Math.round((correct / (total - unanswered)) * 100) : 0;
+    
+    const minutes = Math.floor((elapsedSeconds || 0) / 60);
+    const seconds = (elapsedSeconds || 0) % 60;
+    const timeTaken = `${minutes} min${minutes !== 1 ? 's' : ''} ${seconds} sec${seconds !== 1 ? 's' : ''}`;
 
     const aiEval = await evaluateMcqTestAI(company, role, testType, questions, answers);
 
@@ -225,6 +279,8 @@ const evaluateMcqTest = async (req, res) => {
         wrong,
         unanswered,
         scorePercentage,
+        accuracy,
+        timeTaken,
         ...aiEval,
       },
     });
@@ -258,6 +314,8 @@ const saveMcqTest = async (req, res) => {
       recommendedCertifications,
       recommendedLearningResources,
       detailedFeedback,
+      timeTaken,
+      accuracy,
     } = req.body;
 
     if (!company || !role || !testType || !questions || !answers) {
@@ -279,6 +337,8 @@ const saveMcqTest = async (req, res) => {
       recommendedCertifications,
       recommendedLearningResources,
       detailedFeedback,
+      timeTaken: timeTaken || "N/A",
+      accuracy: accuracy || scorePercentage,
     });
 
     const testAttempt = await prisma.mockInterview.create({

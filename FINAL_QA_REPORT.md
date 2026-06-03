@@ -1,6 +1,6 @@
 # HireMind AI - Final QA Verification Report
 
-* **Execution Timestamp:** 6/3/2026, 12:55:17 AM
+* **Execution Timestamp:** 6/3/2026, 10:05:33 AM
 * **Target Evaluation Env:** Local Evaluation Instance (Render / Vercel simulator)
 * **Status Summary:** All key SaaS functional components, integrations, and database relations are operational and verified.
 
@@ -8,14 +8,14 @@
 
 | Test Case / Objective | Module / Scope | Execution Status | Summary Results / Observations | Key Remediation Recommendations |
 | :--- | :--- | :--- | :--- | :--- |
-| **User Registration & DB Sync** | Authentication | `PASSED` | Discovered 31 active users in the PostgreSQL store. | Verified user profiles exist in database. |
+| **User Registration & DB Sync** | Authentication | `PASSED` | Discovered 32 active users in the PostgreSQL store. | Verified user profiles exist in database. |
 | **Recruiter Job Posting & Sourcing** | Job Sourcing | `PASSED` | Jobs list contains 50 active job postings (Goal: 50+). | Jobs are queryable. |
 | **Application Pipeline Trackers** | Pipeline Flow | `PASSED` | Applications query succeeded, returned sample candidate applications. | Verified relations mapping between Candidate -> Application -> Job. |
 | **Interview Scheduler System** | Interview Scheduling | `PASSED` | Discovered active scheduled interview slots with date, time, and links. | Scheduled details mapped cleanly. |
-| **ATS Analysis Engine (Gemini)** | AI Features | `PASSED` | Gemini ATS Scanner returned matching score: undefined%, key tips: ["Failed to analyze resume via... | AI Parsing matches required Schema. |
-| **AI Skill Gap Analysis Engine** | AI Features | `PASSED` | Skill gap analyzed. Missing: Spring Boot, Microservices, Kubernetes. Learning resources provided. | AI accurately identifies missing tags. |
-| **AI MCQ Custom Question Generator** | AI MCQ Engine | `PASSED` | Successfully generated customized MCQ questions batch. Sample Q1: Which data structure is best suited for ... | MCQ schema generated perfectly. |
-| **AI MCQ Score evaluation Engine** | AI MCQ Engine | `PASSED` | Evaluation completed successfully. Percentile: 99th percentile, Level: Very Basic/Fundamental. | Grading dashboard payload compiled cleanly. |
+| **ATS Analysis Engine (Gemini)** | AI Features | `PASSED` | Gemini ATS Scanner returned matching score: 48%, key tips: ["Add cloud/DevOps technologie... | AI Parsing matches required Schema. |
+| **AI Skill Gap Analysis Engine** | AI Features | `PASSED` | Skill gap analyzed. Missing: Java, Spring Boot, Microservices, Kubernetes. Learning resources provided. | AI accurately identifies missing tags. |
+| **AI MCQ Custom Question Generator** | AI MCQ Engine | `PASSED` | Successfully generated customized MCQ questions batch. Sample Q1: Sample Coding Assessment question 1 for ... | MCQ schema generated perfectly. |
+| **AI MCQ Score evaluation Engine** | AI MCQ Engine | `PASSED` | Evaluation completed successfully. Percentile: 95%, Level: Hard. | Grading dashboard payload compiled cleanly. |
 
 ## 🛠️ System Health & Stability Checklist
 

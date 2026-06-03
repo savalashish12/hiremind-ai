@@ -54,8 +54,17 @@ const ROLES_LIST = [
 ];
 
 const TEST_TYPES_LIST = [
-  "Aptitude", "Logical Reasoning", "Quantitative Aptitude", "Verbal Ability",
-  "Coding Assessment", "Technical MCQ", "HR Screening", "Mixed Assessment"
+  "Aptitude",
+  "Cognitive Ability",
+  "Logical Reasoning",
+  "Quantitative Aptitude",
+  "Verbal Ability",
+  "Communication Skills",
+  "Technical MCQ",
+  "Programming MCQ",
+  "HR Questions",
+  "Group Discussion",
+  "Behavioral Assessment"
 ];
 
 const CandidateMockInterview = () => {
@@ -186,6 +195,7 @@ const CandidateMockInterview = () => {
   // STEP 5: Evaluate MCQ
   const handleSubmitMcq = async () => {
     setLoadingAction(true);
+    const elapsedSeconds = 1800 - examTimer;
     try {
       const res = await API.post("/interview/mcq/evaluate", {
         company: selectedCompany,
@@ -193,6 +203,7 @@ const CandidateMockInterview = () => {
         testType: selectedTestType,
         questions: mcqQuestions,
         answers: mcqAnswers,
+        elapsedSeconds,
       });
 
       if (res.data.success) {
@@ -220,6 +231,8 @@ const CandidateMockInterview = () => {
           recommendedCertifications: evalData.recommendedCertifications,
           recommendedLearningResources: evalData.recommendedLearningResources,
           detailedFeedback: evalData.detailedFeedback,
+          timeTaken: evalData.timeTaken,
+          accuracy: evalData.accuracy,
         });
 
         toast.success("Test evaluation saved successfully!");
@@ -756,20 +769,20 @@ const CandidateMockInterview = () => {
                   {/* Summary Dials Row */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 text-center">
-                      <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Score %</span>
-                      <strong className="text-2xl text-blue-400">{mcqResult.scorePercentage}%</strong>
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wider block mb-1">Score</span>
+                      <strong className="text-2xl text-blue-400">{mcqResult.correct} / {mcqResult.total}</strong>
                     </div>
                     <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 text-center">
-                      <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Correct Items</span>
-                      <strong className="text-2xl text-green-400">{mcqResult.correct} / {mcqResult.total}</strong>
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wider block mb-1">Accuracy</span>
+                      <strong className="text-2xl text-green-400">{mcqResult.accuracy}%</strong>
                     </div>
                     <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 text-center">
-                      <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Percentile</span>
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wider block mb-1">Time Taken</span>
+                      <strong className="text-2xl text-amber-400">{mcqResult.timeTaken}</strong>
+                    </div>
+                    <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 text-center">
+                      <span className="text-[10px] text-slate-400 uppercase tracking-wider block mb-1">Percentile</span>
                       <strong className="text-2xl text-purple-400">{mcqResult.percentileEstimate}</strong>
-                    </div>
-                    <div className="bg-slate-900/60 p-4 rounded-xl border border-slate-800 text-center">
-                      <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Difficulty</span>
-                      <strong className="text-2xl text-yellow-400">{mcqResult.difficultyLevel}</strong>
                     </div>
                   </div>
 
@@ -1045,22 +1058,28 @@ const CandidateMockInterview = () => {
                     {/* Score display */}
                     <div className="grid grid-cols-4 gap-3 text-center">
                       <div className="bg-slate-950/40 p-3.5 rounded-xl border border-slate-850">
-                        <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Score %</span>
-                        <strong className="text-base text-slate-200">
-                          {selectedSession.overallRating.split(" | ")[0].replace("Score: ", "")}
+                        <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Score</span>
+                        <strong className="text-base text-blue-400">
+                          {selectedSession.technicalScore} / {(typeof selectedSession.questions === "string" ? JSON.parse(selectedSession.questions) : selectedSession.questions).length}
                         </strong>
                       </div>
                       <div className="bg-slate-950/40 p-3.5 rounded-xl border border-slate-850">
-                        <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Correct</span>
-                        <strong className="text-base text-green-400">{selectedSession.technicalScore}</strong>
+                        <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Accuracy</span>
+                        <strong className="text-base text-green-400">
+                          {mcqMeta.accuracy ? `${mcqMeta.accuracy}%` : "N/A"}
+                        </strong>
                       </div>
                       <div className="bg-slate-950/40 p-3.5 rounded-xl border border-slate-850">
-                        <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Wrong</span>
-                        <strong className="text-base text-red-400">{selectedSession.communicationScore}</strong>
+                        <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Time Taken</span>
+                        <strong className="text-base text-amber-400">
+                          {mcqMeta.timeTaken || "N/A"}
+                        </strong>
                       </div>
                       <div className="bg-slate-950/40 p-3.5 rounded-xl border border-slate-850">
-                        <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Unanswered</span>
-                        <strong className="text-base text-slate-400">{selectedSession.confidenceScore}</strong>
+                        <span className="text-[10px] text-slate-500 uppercase tracking-wider block mb-1">Percentile</span>
+                        <strong className="text-base text-purple-400">
+                          {mcqMeta.percentileEstimate || "N/A"}
+                        </strong>
                       </div>
                     </div>
 

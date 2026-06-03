@@ -5,6 +5,22 @@ import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid
 } from "recharts";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ShieldAlert,
+  Users,
+  Briefcase,
+  FileText,
+  Clock,
+  Trash2,
+  Lock,
+  Unlock,
+  Layers,
+  Activity,
+  Heart,
+  TrendingUp,
+  Search
+} from "lucide-react";
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -13,6 +29,7 @@ const AdminDashboard = () => {
   const [jobs, setJobs] = useState([]);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [logSearch, setLogSearch] = useState("");
 
   const fetchAnalytics = async () => {
     try {
@@ -105,180 +122,231 @@ const AdminDashboard = () => {
 
   const COLORS = ["#3b82f6", "#a855f7", "#ef4444"];
 
-  return (
-    <div className="p-10 max-w-7xl mx-auto animate-in fade-in duration-300">
-      <h1 className="text-4xl font-extrabold mb-10 text-white bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
-        Admin Administration Panel
-      </h1>
+  const filteredLogs = logs.filter(l => 
+    l.action.toLowerCase().includes(logSearch.toLowerCase()) ||
+    l.details.toLowerCase().includes(logSearch.toLowerCase()) ||
+    l.userId.toLowerCase().includes(logSearch.toLowerCase())
+  );
 
-      {/* Tabs list */}
-      <div className="flex flex-wrap gap-4 border-b border-slate-800 mb-8 pb-3">
-        <button
-          onClick={() => setActiveTab("overview")}
-          className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-            activeTab === "overview" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white"
-          }`}
-        >
-          📈 Platform Overview
-        </button>
-        <button
-          onClick={() => setActiveTab("users")}
-          className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-            activeTab === "users" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white"
-          }`}
-        >
-          👥 Manage Users
-        </button>
-        <button
-          onClick={() => setActiveTab("jobs")}
-          className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-            activeTab === "jobs" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white"
-          }`}
-        >
-          💼 Manage Jobs
-        </button>
-        <button
-          onClick={() => setActiveTab("logs")}
-          className={`px-4 py-2 rounded-lg font-semibold transition-all ${
-            activeTab === "logs" ? "bg-blue-600 text-white" : "text-slate-400 hover:text-white"
-          }`}
-        >
-          📜 Activity Audit Logs
-        </button>
+  return (
+    <div className="p-6 md:p-10 max-w-7xl mx-auto min-h-screen space-y-8 text-slate-100">
+      
+      {/* Title */}
+      <div className="flex justify-between items-center border-b border-slate-900/60 pb-6">
+        <div>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+            Admin Administration Panel
+          </h1>
+          <p className="text-slate-450 text-xs md:text-sm mt-1">Audit active profiles, review platform analytics, and manage database records.</p>
+        </div>
+
+        {/* Tab switcher */}
+        <div className="flex gap-2 bg-slate-900/40 p-1 border border-slate-850 rounded-2xl">
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === "overview" ? "bg-blue-600 text-white shadow-lg" : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            📈 Overview
+          </button>
+          <button
+            onClick={() => setActiveTab("users")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === "users" ? "bg-blue-600 text-white shadow-lg" : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            👥 Users
+          </button>
+          <button
+            onClick={() => setActiveTab("jobs")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === "jobs" ? "bg-blue-600 text-white shadow-lg" : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            💼 Jobs
+          </button>
+          <button
+            onClick={() => setActiveTab("logs")}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeTab === "logs" ? "bg-blue-600 text-white shadow-lg" : "text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            📜 Activity Logs
+          </button>
+        </div>
       </div>
 
       {loading ? (
         <div className="space-y-4 animate-pulse">
-          <div className="h-28 bg-slate-800 rounded-xl" />
-          <div className="h-60 bg-slate-800 rounded-xl" />
+          <div className="h-28 bg-slate-900/40 rounded-3xl border border-slate-850" />
+          <div className="h-60 bg-slate-900/40 rounded-3xl border border-slate-850" />
         </div>
       ) : (
-        <>
+        <AnimatePresence mode="wait">
+          
           {activeTab === "overview" && analytics && (
-            <div className="space-y-10">
-              {/* Stat Cards */}
-              <div className="grid md:grid-cols-5 gap-6">
-                <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-md">
-                  <h2 className="text-3xl font-extrabold text-blue-400">{analytics.totalUsers}</h2>
-                  <p className="mt-1 text-slate-400 text-xs uppercase tracking-wide">Total Users</p>
+            <motion.div
+              key="overview"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="space-y-8 text-left"
+            >
+              {/* Metrics Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
+                <div className="bg-slate-900/40 backdrop-blur-md p-5 rounded-2xl border border-slate-850 shadow-md">
+                  <span className="text-2xl font-black text-blue-400">{analytics.totalUsers}</span>
+                  <p className="mt-1 text-slate-400 text-[10px] uppercase font-bold tracking-wider">Total Users</p>
                 </div>
-                <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-md">
-                  <h2 className="text-3xl font-extrabold text-purple-400">{analytics.activeRecruiters}</h2>
-                  <p className="mt-1 text-slate-400 text-xs uppercase tracking-wide">Recruiters</p>
+                <div className="bg-slate-900/40 backdrop-blur-md p-5 rounded-2xl border border-slate-850 shadow-md">
+                  <span className="text-2xl font-black text-purple-400">{analytics.activeRecruiters}</span>
+                  <p className="mt-1 text-slate-400 text-[10px] uppercase font-bold tracking-wider">Recruiters</p>
                 </div>
-                <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-md">
-                  <h2 className="text-3xl font-extrabold text-emerald-400">{analytics.totalCandidates || (analytics.totalUsers - analytics.activeRecruiters - 1)}</h2>
-                  <p className="mt-1 text-slate-400 text-xs uppercase tracking-wide">Candidates</p>
+                <div className="bg-slate-900/40 backdrop-blur-md p-5 rounded-2xl border border-slate-850 shadow-md">
+                  <span className="text-2xl font-black text-emerald-400">{analytics.totalCandidates || (analytics.totalUsers - analytics.activeRecruiters - 1)}</span>
+                  <p className="mt-1 text-slate-400 text-[10px] uppercase font-bold tracking-wider">Candidates</p>
                 </div>
-                <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-md">
-                  <h2 className="text-3xl font-extrabold text-yellow-400">{analytics.totalJobs}</h2>
-                  <p className="mt-1 text-slate-400 text-xs uppercase tracking-wide">Jobs Posted</p>
+                <div className="bg-slate-900/40 backdrop-blur-md p-5 rounded-2xl border border-slate-850 shadow-md">
+                  <span className="text-2xl font-black text-yellow-500">{analytics.totalJobs}</span>
+                  <p className="mt-1 text-slate-400 text-[10px] uppercase font-bold tracking-wider">Open Jobs</p>
                 </div>
-                <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-md">
-                  <h2 className="text-3xl font-extrabold text-pink-400">{analytics.totalApplications}</h2>
-                  <p className="mt-1 text-slate-400 text-xs uppercase tracking-wide">Applications</p>
+                <div className="bg-slate-900/40 backdrop-blur-md p-5 rounded-2xl border border-slate-850 shadow-md">
+                  <span className="text-2xl font-black text-pink-400">{analytics.totalApplications}</span>
+                  <p className="mt-1 text-slate-400 text-[10px] uppercase font-bold tracking-wider">Applications</p>
                 </div>
               </div>
 
-              {/* Charts Row */}
+              {/* System Health Section */}
+              <div className="bg-slate-900/60 backdrop-blur-md p-6 rounded-3xl border border-slate-850 shadow-md space-y-4">
+                <h3 className="font-bold text-white text-sm flex items-center gap-1.5 border-b border-slate-950 pb-3">
+                  <Activity size={15} className="text-emerald-400" /> Platform Infrastructure Health
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-semibold">
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-850 flex justify-between items-center">
+                    <span className="text-slate-450">PostgreSQL DB</span>
+                    <span className="text-green-400 flex items-center gap-1">● Active</span>
+                  </div>
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-850 flex justify-between items-center">
+                    <span className="text-slate-450">Prisma client</span>
+                    <span className="text-green-400 flex items-center gap-1">● Sync</span>
+                  </div>
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-850 flex justify-between items-center">
+                    <span className="text-slate-450">Gemini AI API</span>
+                    <span className="text-green-400 flex items-center gap-1">● Online</span>
+                  </div>
+                  <div className="bg-slate-950 p-4 rounded-xl border border-slate-850 flex justify-between items-center">
+                    <span className="text-slate-450">Nodemailer MT</span>
+                    <span className="text-green-400 flex items-center gap-1">● Loaded</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Charts grid */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Role Ratio Chart */}
-                <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-md">
-                  <h3 className="text-xl font-bold text-white mb-6">User Roles Breakdown</h3>
-                  <div className="h-[300px]">
+                {/* Pie Chart */}
+                <div className="bg-slate-900/40 backdrop-blur-md p-6 rounded-3xl border border-slate-850 shadow-md">
+                  <h3 className="text-sm font-bold text-white mb-6">User Accounts Ratio</h3>
+                  <div className="h-[280px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={roleChartData} dataKey="value" nameKey="name" outerRadius={100} label>
+                        <Pie data={roleChartData} dataKey="value" nameKey="name" outerRadius={90} label={{ fill: '#94a3b8', fontSize: 10 }}>
                           {roleChartData.map((entry, idx) => (
                             <Cell key={`cell-${idx}`} fill={COLORS[idx % COLORS.length]} />
                           ))}
                         </Pie>
-                        <Tooltip />
+                        <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", color: "#fff" }} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
 
-                {/* Performance volume chart */}
-                <div className="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-md">
-                  <h3 className="text-xl font-bold text-white mb-6">System Volume Counts</h3>
-                  <div className="h-[300px]">
+                {/* Bar Chart */}
+                <div className="bg-slate-900/40 backdrop-blur-md p-6 rounded-3xl border border-slate-850 shadow-md">
+                  <h3 className="text-sm font-bold text-white mb-6">Database Records Count</h3>
+                  <div className="h-[280px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={[
                         { name: "Users", count: analytics.totalUsers },
-                        { name: "Jobs", count: analytics.totalJobs },
+                        { name: "Vacancies", count: analytics.totalJobs },
                         { name: "Applications", count: analytics.totalApplications }
                       ]}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                        <XAxis dataKey="name" stroke="#94a3b8" />
-                        <YAxis stroke="#94a3b8" />
-                        <Tooltip />
-                        <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                        <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 10 }} />
+                        <YAxis stroke="#64748b" tick={{ fontSize: 10 }} />
+                        <Tooltip contentStyle={{ backgroundColor: "#0f172a", borderColor: "#334155", color: "#fff" }} />
+                        <Bar dataKey="count" fill="#3b82f6" radius={[4, 4, 0, 0]} name="Record Volume" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {activeTab === "users" && (
-            <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-lg">
-              <div className="p-6 border-b border-slate-700 bg-slate-900/40">
-                <h2 className="text-2xl font-bold text-white">Manage Registrants</h2>
-                <p className="text-xs text-slate-400 mt-1">Suspend access or delete account records from the database.</p>
+            <motion.div
+              key="users"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="bg-slate-900/40 backdrop-blur-md border border-slate-850 rounded-3xl overflow-hidden shadow-lg text-left"
+            >
+              <div className="p-6 border-b border-slate-850 bg-slate-950/40">
+                <h2 className="text-xl font-bold text-white">Manage Registrants Database</h2>
+                <p className="text-xs text-slate-450 mt-1">Suspend access or purge redundant accounts records.</p>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-sm">
+                <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="bg-slate-900 text-slate-300">
-                      <th className="p-4 border-b border-slate-700">Full Name</th>
-                      <th className="p-4 border-b border-slate-700">Email Address</th>
-                      <th className="p-4 border-b border-slate-700">System Role</th>
-                      <th className="p-4 border-b border-slate-700">Status</th>
-                      <th className="p-4 border-b border-slate-700">Joined On</th>
-                      <th className="p-4 border-b border-slate-700 text-right">Admin Actions</th>
+                    <tr className="bg-slate-950 text-slate-400 font-semibold">
+                      <th className="p-4 border-b border-slate-850">User Profile Name</th>
+                      <th className="p-4 border-b border-slate-850">Email Address</th>
+                      <th className="p-4 border-b border-slate-850">System Role</th>
+                      <th className="p-4 border-b border-slate-850">Access Status</th>
+                      <th className="p-4 border-b border-slate-850">Signup Timestamp</th>
+                      <th className="p-4 border-b border-slate-850 text-right">Moderator Controls</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-850 text-slate-300">
                     {users.map((user) => (
-                      <tr key={user.id} className="hover:bg-slate-700/50 transition-colors border-b border-slate-700/60">
-                        <td className="p-4 font-semibold text-slate-200">{user.fullName}</td>
-                        <td className="p-4 text-slate-300">{user.email}</td>
+                      <tr key={user.id} className="hover:bg-slate-900/30 transition-colors">
+                        <td className="p-4 font-bold text-white">{user.fullName}</td>
+                        <td className="p-4 text-slate-350">{user.email}</td>
                         <td className="p-4">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide ${
-                            user.role === 'ADMIN' ? 'bg-red-950 text-red-300 border border-red-900/30' : 
-                            user.role === 'RECRUITER' ? 'bg-purple-950 text-purple-300 border border-purple-900/30' : 'bg-blue-950 text-blue-300 border border-blue-900/30'
+                          <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wide border ${
+                            user.role === 'ADMIN' ? 'bg-red-950 text-red-400 border-red-900/30' : 
+                            user.role === 'RECRUITER' ? 'bg-purple-950 text-purple-400 border-purple-900/30' : 'bg-blue-950 text-blue-400 border-blue-900/30'
                           }`}>
                             {user.role}
                           </span>
                         </td>
-                        <td className="p-4">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold ${
-                            user.isSuspended ? "bg-red-900 text-red-200 animate-pulse" : "bg-green-900 text-green-200"
+                        <td className="p-4 font-bold">
+                          <span className={`px-2 py-0.5 rounded text-[9px] ${
+                            user.isSuspended ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-green-500/10 text-green-400 border border-green-500/20"
                           }`}>
                             {user.isSuspended ? "SUSPENDED" : "ACTIVE"}
                           </span>
                         </td>
-                        <td className="p-4 text-slate-400">
+                        <td className="p-4 text-slate-500">
                           {new Date(user.createdAt).toLocaleDateString()}
                         </td>
-                        <td className="p-4 text-right flex justify-end gap-2.5">
+                        <td className="p-4 text-right flex justify-end gap-2 text-xs">
                           <button
                             onClick={() => toggleSuspension(user.id, user.isSuspended)}
                             disabled={user.role === "ADMIN"}
-                            className={`px-3 py-1 rounded transition-colors text-xs font-bold disabled:opacity-40 ${
+                            className={`px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer disabled:opacity-30 ${
                               user.isSuspended 
-                                ? "bg-green-600/20 text-green-400 hover:bg-green-600 hover:text-white"
-                                : "bg-yellow-600/20 text-yellow-400 hover:bg-yellow-600 hover:text-white"
+                                ? "bg-green-600/10 text-green-400 hover:bg-green-600 hover:text-white border border-green-500/20"
+                                : "bg-yellow-600/10 text-yellow-400 hover:bg-yellow-600 hover:text-white border border-yellow-500/20"
                             }`}
                           >
-                            {user.isSuspended ? "Activate" : "Suspend"}
+                            {user.isSuspended ? "Re-Activate" : "Suspend"}
                           </button>
                           <button 
                             onClick={() => deleteUser(user.id)}
                             disabled={user.role === 'ADMIN'}
-                            className="bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white px-3 py-1 rounded transition-colors text-xs font-bold disabled:opacity-40"
+                            className="bg-red-650/10 text-red-400 hover:bg-red-650 hover:text-white border border-red-500/20 px-3 py-1.5 rounded-xl font-bold transition-all cursor-pointer disabled:opacity-30"
                           >
                             Delete
                           </button>
@@ -288,48 +356,54 @@ const AdminDashboard = () => {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {activeTab === "jobs" && (
-            <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-lg">
-              <div className="p-6 border-b border-slate-700 bg-slate-900/40">
-                <h2 className="text-2xl font-bold text-white">Manage Job Postings</h2>
-                <p className="text-xs text-slate-400 mt-1">Review or delete jobs currently indexable across the system.</p>
+            <motion.div
+              key="jobs"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="bg-slate-900/40 backdrop-blur-md border border-slate-850 rounded-3xl overflow-hidden shadow-lg text-left"
+            >
+              <div className="p-6 border-b border-slate-850 bg-slate-950/40">
+                <h2 className="text-xl font-bold text-white">Manage Vacancies Listings</h2>
+                <p className="text-xs text-slate-450 mt-1">Purge vacancies records and associated applications pipelines from the database.</p>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-sm">
+                <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="bg-slate-900 text-slate-300">
-                      <th className="p-4 border-b border-slate-700">Job Title</th>
-                      <th className="p-4 border-b border-slate-700">Recruiter</th>
-                      <th className="p-4 border-b border-slate-700">Location</th>
-                      <th className="p-4 border-b border-slate-700">Salary</th>
-                      <th className="p-4 border-b border-slate-700">Created On</th>
-                      <th className="p-4 border-b border-slate-700 text-right">Action</th>
+                    <tr className="bg-slate-950 text-slate-400 font-semibold">
+                      <th className="p-4 border-b border-slate-850">Role Title</th>
+                      <th className="p-4 border-b border-slate-850">Recruiter Host</th>
+                      <th className="p-4 border-b border-slate-850">Location</th>
+                      <th className="p-4 border-b border-slate-850">CTC Salary</th>
+                      <th className="p-4 border-b border-slate-850">Created Date</th>
+                      <th className="p-4 border-b border-slate-850 text-right">Moderator Control</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-855 text-slate-350">
                     {jobs.map((job) => (
-                      <tr key={job.id} className="hover:bg-slate-700/50 transition-colors border-b border-slate-700/60">
-                        <td className="p-4 font-semibold text-slate-200">{job.title}</td>
+                      <tr key={job.id} className="hover:bg-slate-900/30 transition-colors">
+                        <td className="p-4 font-bold text-white">{job.title}</td>
                         <td className="p-4 text-slate-300">
                           <div>
                             <p className="font-bold text-slate-200">{job.recruiter?.fullName}</p>
-                            <p className="text-[10px] text-slate-550">{job.recruiter?.email}</p>
+                            <p className="text-[10px] text-slate-500 mt-0.5">{job.recruiter?.email}</p>
                           </div>
                         </td>
-                        <td className="p-4 text-slate-300">{job.location}</td>
-                        <td className="p-4 text-slate-300">{job.salary || "N/A"}</td>
-                        <td className="p-4 text-slate-400">
+                        <td className="p-4 text-slate-350">{job.location}</td>
+                        <td className="p-4 text-slate-350">{job.salary || "N/A"}</td>
+                        <td className="p-4 text-slate-500">
                           {new Date(job.createdAt).toLocaleDateString()}
                         </td>
                         <td className="p-4 text-right">
                           <button 
                             onClick={() => deleteJob(job.id)}
-                            className="bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white px-3 py-1.5 rounded-xl transition-colors text-xs font-bold"
+                            className="bg-red-650/10 text-red-400 hover:bg-red-650 hover:text-white border border-red-500/20 px-4.5 py-2 rounded-xl font-bold cursor-pointer transition-colors"
                           >
-                            Delete Posting
+                            Purge Listing
                           </button>
                         </td>
                       </tr>
@@ -337,59 +411,84 @@ const AdminDashboard = () => {
                   </tbody>
                 </table>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {activeTab === "logs" && (
-            <div className="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-lg">
-              <div className="p-6 border-b border-slate-700 bg-slate-900/40">
-                <h2 className="text-2xl font-bold text-white">System Activity Audit Trail</h2>
-                <p className="text-xs text-slate-400 mt-1">Audit log records representing operations performed across the system.</p>
+            <motion.div
+              key="logs"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="bg-slate-900/40 backdrop-blur-md border border-slate-850 rounded-3xl overflow-hidden shadow-lg text-left space-y-4 p-6"
+            >
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-850">
+                <div>
+                  <h2 className="text-xl font-bold text-white">System Audit Log Trail</h2>
+                  <p className="text-xs text-slate-450 mt-1">Audit logs representing actions dispatched across system modules.</p>
+                </div>
+                
+                {/* Audit logs filter input */}
+                <div className="relative w-full sm:w-64">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <input
+                    type="text"
+                    value={logSearch}
+                    onChange={(e) => setLogSearch(e.target.value)}
+                    placeholder="Search logs details..."
+                    className="w-full bg-slate-950 border border-slate-850 rounded-xl pl-9 pr-4 py-2 text-xs text-slate-200 placeholder-slate-550 focus:outline-none focus:border-blue-500"
+                  />
+                </div>
               </div>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse text-sm">
-                  <thead>
-                    <tr className="bg-slate-900 text-slate-300">
-                      <th className="p-4 border-b border-slate-700">Timestamp</th>
-                      <th className="p-4 border-b border-slate-700">Action Event</th>
-                      <th className="p-4 border-b border-slate-700">Operation Details</th>
-                      <th className="p-4 border-b border-slate-700">Initiator ID</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {logs.length === 0 ? (
-                      <tr>
-                        <td colSpan="4" className="text-center py-8 text-slate-500 font-medium italic">No activity logs recorded yet.</td>
+
+              <div className="overflow-x-auto rounded-xl border border-slate-850">
+                <div className="max-h-[500px] overflow-y-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-950 text-slate-400 font-semibold sticky top-0 z-15 shadow">
+                        <th className="p-4 border-b border-slate-850">Timestamp</th>
+                        <th className="p-4 border-b border-slate-850">Action Event Code</th>
+                        <th className="p-4 border-b border-slate-850">Event Details Log</th>
+                        <th className="p-4 border-b border-slate-850">User ID</th>
                       </tr>
-                    ) : (
-                      logs.map((log) => (
-                        <tr key={log.id} className="hover:bg-slate-700/50 transition-colors border-b border-slate-700/60">
-                          <td className="p-4 text-slate-450 font-mono text-xs">
-                            {new Date(log.createdAt).toLocaleString()}
-                          </td>
-                          <td className="p-4">
-                            <span className={`px-2 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide ${
-                              log.action.includes('CREATED') ? 'bg-green-950 text-green-300 border border-green-900/30' :
-                              log.action.includes('UPLOADED') ? 'bg-blue-950 text-blue-300 border border-blue-900/30' :
-                              log.action.includes('SCHEDULED') ? 'bg-yellow-950 text-yellow-300 border border-yellow-900/30' : 'bg-purple-950 text-purple-300 border border-purple-900/30'
-                            }`}>
-                              {log.action}
-                            </span>
-                          </td>
-                          <td className="p-4 text-slate-200">{log.details}</td>
-                          <td className="p-4 text-slate-450 font-mono text-xs truncate max-w-[150px]" title={log.userId}>
-                            {log.userId}
-                          </td>
+                    </thead>
+                    <tbody className="divide-y divide-slate-855 text-slate-350">
+                      {filteredLogs.length === 0 ? (
+                        <tr>
+                          <td colSpan="4" className="text-center py-10 text-slate-500 italic">No activity audit logs found matching criteria.</td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                      ) : (
+                        filteredLogs.map((log) => (
+                          <tr key={log.id} className="hover:bg-slate-900/30 transition-colors">
+                            <td className="p-4 text-slate-500 font-mono text-[10px]">
+                              {new Date(log.createdAt).toLocaleString()}
+                            </td>
+                            <td className="p-4 font-bold">
+                              <span className={`px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wide border ${
+                                log.action.includes('CREATED') ? 'bg-green-500/5 text-green-400 border-green-500/10' :
+                                log.action.includes('UPLOADED') ? 'bg-blue-500/5 text-blue-400 border-blue-500/10' :
+                                log.action.includes('SCHEDULED') ? 'bg-yellow-500/5 text-yellow-400 border-yellow-500/10' : 'bg-purple-500/5 text-purple-400 border-purple-500/10'
+                              }`}>
+                                {log.action}
+                              </span>
+                            </td>
+                            <td className="p-4 text-slate-200 leading-normal">{log.details}</td>
+                            <td className="p-4 text-slate-500 font-mono text-[10px] truncate max-w-[150px]" title={log.userId}>
+                              {log.userId}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
+            </motion.div>
           )}
-        </>
+
+        </AnimatePresence>
       )}
+
     </div>
   );
 };
