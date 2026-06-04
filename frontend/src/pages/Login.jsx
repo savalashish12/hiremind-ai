@@ -1,4 +1,5 @@
 import { useState, useContext } from "react";
+import toast from "react-hot-toast";
 
 import { useNavigate } from "react-router-dom";
 
@@ -61,9 +62,9 @@ const Login = () => {
       }
 
     } catch (error) {
-
-      alert(
-        error.response.data.message
+      console.error("Login failed:", error);
+      toast.error(
+        error.response?.data?.message || error.message || "Login failed"
       );
     }
   };

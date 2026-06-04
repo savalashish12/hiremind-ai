@@ -75,7 +75,7 @@ const ResumeUpload = ({ fetchProfile, currentResumeUrl }) => {
             <span className="text-slate-200 font-bold block truncate">{getResumeFileName(currentResumeUrl)}</span>
           </div>
           <a
-            href={currentResumeUrl}
+            href={`http://localhost:5000/api/candidate/document?url=${encodeURIComponent(currentResumeUrl)}`}
             target="_blank"
             rel="noreferrer"
             className="text-xs bg-blue-600/10 text-blue-400 hover:bg-blue-600 hover:text-white border border-blue-900/20 px-3.5 py-1.5 rounded-xl font-bold transition-all cursor-pointer select-none inline-block whitespace-nowrap"

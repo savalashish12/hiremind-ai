@@ -277,7 +277,7 @@ const CandidatePortfolioManager = () => {
                   {degreeUrl && (
                     <div className="mt-3 flex items-center justify-between text-xs border-t border-slate-800/80 pt-2">
                       <span className="text-emerald-400 font-bold">✓ Verified Degree Uploaded</span>
-                      <a href={degreeUrl} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">
+                      <a href={`http://localhost:5000/api/candidate/document?url=${encodeURIComponent(degreeUrl)}`} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline">
                         View Degree PDF ↗
                       </a>
                     </div>
@@ -302,7 +302,7 @@ const CandidatePortfolioManager = () => {
                       <ul className="list-disc ml-4 text-[11px] text-slate-400 space-y-1 max-h-24 overflow-y-auto">
                         {certUrls.map((cert, idx) => (
                           <li key={idx}>
-                            <a href={cert.url} target="_blank" rel="noreferrer" className="hover:underline text-blue-400">
+                            <a href={`http://localhost:5000/api/candidate/document?url=${encodeURIComponent(cert.url)}`} target="_blank" rel="noreferrer" className="hover:underline text-blue-400">
                               {cert.name || `Cert ${idx + 1}`}
                             </a>
                           </li>

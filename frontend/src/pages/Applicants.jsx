@@ -679,7 +679,7 @@ const Applicants = () => {
                               <span className="text-slate-400">Educational Degree:</span>
                               {application.candidate.candidateProfile?.degreeUrl ? (
                                 <a
-                                  href={application.candidate.candidateProfile.degreeUrl}
+                                  href={`http://localhost:5000/api/candidate/document?url=${encodeURIComponent(application.candidate.candidateProfile.degreeUrl)}`}
                                   target="_blank"
                                   rel="noreferrer"
                                   className="text-emerald-450 hover:underline font-bold"
@@ -708,7 +708,7 @@ const Applicants = () => {
                                     {parsedCerts.map((c, idx) => (
                                       <li key={idx}>
                                         <a
-                                          href={c.url}
+                                          href={`http://localhost:5000/api/candidate/document?url=${encodeURIComponent(c.url)}`}
                                           target="_blank"
                                           rel="noreferrer"
                                           className="text-blue-400 hover:underline font-bold"
@@ -766,7 +766,7 @@ const Applicants = () => {
                             <div className="space-y-1.5">
                               <p className="text-slate-450 leading-relaxed">Official employment offer letter issued to candidate timeline.</p>
                               <a
-                                href={application.offerLetterUrl}
+                                href={`http://localhost:5000/api/candidate/document?url=${encodeURIComponent(application.offerLetterUrl)}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 className="bg-blue-600/10 text-blue-400 border border-blue-900/20 hover:bg-blue-600 hover:text-white py-1 rounded-lg font-bold text-center block"
@@ -796,7 +796,7 @@ const Applicants = () => {
 
                         {application.candidate.candidateProfile?.resumeUrl && (
                           <a
-                            href={application.candidate.candidateProfile.resumeUrl}
+                            href={`http://localhost:5000/api/candidate/document?url=${encodeURIComponent(application.candidate.candidateProfile.resumeUrl)}`}
                             target="_blank"
                             rel="noreferrer"
                             className="bg-green-600 hover:bg-green-550 text-white font-bold py-2 rounded-xl text-xs w-full text-center block shadow transition-all active:scale-95"

@@ -2,6 +2,7 @@ const prisma = require("../config/prisma");
 const { generateCoverLetterAI } = require("../services/aiService");
 const cloudinary = require("../config/cloudinary");
 const fs = require("fs");
+const axios = require("axios");
 
 // Cover Letter Generator
 const generateCoverLetter = async (req, res) => {
@@ -300,7 +301,7 @@ const uploadCredentials = async (req, res) => {
       const degreeFile = files.degree[0];
       const uploadedDegree = await cloudinary.uploader.upload(degreeFile.path, {
         folder: "credentials",
-        resource_type: "raw",
+        resource_type: "auto",
       });
       degreeUrl = uploadedDegree.secure_url;
 
@@ -314,7 +315,7 @@ const uploadCredentials = async (req, res) => {
       for (const file of files.certificates) {
         const uploadedCert = await cloudinary.uploader.upload(file.path, {
           folder: "credentials",
-          resource_type: "raw",
+          resource_type: "auto",
         });
         certUrls.push({
           name: file.originalname.split(".")[0],
@@ -367,6 +368,61 @@ const uploadCredentials = async (req, res) => {
   }
 };
 
+const viewDocument = async (req, res) => {
+  try {
+    const { url } = req.query;
+    if (!url) {
+      return res.status(400).send("Document URL is required");
+    }
+
+    if (!url.startsWith("https://res.cloudinary.com/") && !url.startsWith("http://res.cloudinary.com/")) {
+      return res.status(403).send("Access denied: Invalid document domain");
+    }
+
+    // Parse Cloudinary URL to get public_id, format, resource_type, type
+    const match = url.match(/https?:\/\/res\.cloudinary\.com\/([^/]+)\/([^/]+)\/([^/]+)\/(?:v\d+\/)?(.+)/);
+    if (!match) {
+      return res.status(400).send("Invalid Cloudinary URL format");
+    }
+
+    const resourceType = match[2]; // e.g. "image" or "raw"
+    const type = match[3];         // e.g. "upload"
+    let fullPath = match[4];       // e.g. "hiremind-resumes/1780470187452_bliduf.pdf"
+
+    let publicId = fullPath;
+    let format = "";
+
+    if (resourceType === "image") {
+      const lastDotIndex = fullPath.lastIndexOf(".");
+      if (lastDotIndex !== -1) {
+        publicId = fullPath.substring(0, lastDotIndex);
+        format = fullPath.substring(lastDotIndex + 1);
+      }
+    }
+
+    // Generate signed private download URL using Cloudinary SDK
+    const downloadUrl = cloudinary.utils.private_download_url(
+      publicId,
+      format,
+      {
+        resource_type: resourceType,
+        type: type
+      }
+    );
+
+    const response = await axios.get(downloadUrl, {
+      responseType: "arraybuffer",
+    });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "inline; filename=\"document.pdf\"");
+    res.send(response.data);
+  } catch (error) {
+    console.error("View document proxy error:", error.message);
+    res.status(500).send("Failed to load PDF document");
+  }
+};
+
 module.exports = {
   generateCoverLetter,
   toggleSavedJob,
@@ -375,4 +431,5 @@ module.exports = {
   getPortfolio,
   savePortfolio,
   uploadCredentials,
+  viewDocument,
 };

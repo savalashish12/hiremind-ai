@@ -11,7 +11,11 @@ const {
   getPortfolio,
   savePortfolio,
   uploadCredentials,
+  viewDocument,
 } = require("../controllers/candidateController");
+
+// Public candidate document/resume proxy viewer
+router.get("/document", viewDocument);
 
 // Public candidate portfolio lookup
 router.get("/portfolio/:candidateId", getPortfolio);

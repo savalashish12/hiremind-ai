@@ -1,4 +1,5 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 import API from "../services/api";
 
@@ -47,7 +48,7 @@ const CreateJobForm = ({
         payload
       );
 
-      alert(
+      toast.success(
         "Job created successfully"
       );
 
@@ -63,9 +64,9 @@ const CreateJobForm = ({
       fetchRecruiterJobs();
 
     } catch (error) {
-
-      alert(
-        error.response.data.message
+      console.error("Create job error:", error);
+      toast.error(
+        error.response?.data?.message || error.message || "Failed to create job"
       );
     }
   };

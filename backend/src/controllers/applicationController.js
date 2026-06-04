@@ -135,7 +135,7 @@ const uploadResume = async (req, res) => {
       await cloudinary.uploader.upload(
         filePath,
         {
-          resource_type: "raw",
+          resource_type: "auto",
           folder:
             "hiremind-resumes",
           use_filename: true,
@@ -494,7 +494,7 @@ const generateOfferLetter = async (req, res) => {
     // Upload file to Cloudinary
     const uploadedFile = await cloudinary.uploader.upload(tempFilePath, {
       folder: "offer-letters",
-      resource_type: "raw",
+      resource_type: "auto",
     });
 
     // Delete local temp file

@@ -639,10 +639,10 @@ const CandidateDashboard = () => {
                                   </p>
                                 </div>
                                 <a
-                                  href={app.offerLetterUrl}
+                                  href={`http://localhost:5000/api/candidate/document?url=${encodeURIComponent(app.offerLetterUrl)}`}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="bg-green-600 hover:bg-green-500 text-white font-bold px-4.5 py-2 rounded-xl transition-all shadow-md text-xs cursor-pointer inline-flex items-center gap-1 whitespace-nowrap"
+                                  className="bg-green-600 hover:bg-green-550 text-white font-bold px-4.5 py-2 rounded-xl transition-all shadow-md text-xs cursor-pointer inline-flex items-center gap-1 whitespace-nowrap"
                                 >
                                   Download PDF <ChevronRight size={12} />
                                 </a>
@@ -760,7 +760,7 @@ const CandidateDashboard = () => {
                               <td className="p-4 text-slate-500">{new Date(res.uploadedAt).toLocaleString()}</td>
                               <td className="p-4 text-right">
                                 <a
-                                  href={res.url}
+                                  href={`http://localhost:5000/api/candidate/document?url=${encodeURIComponent(res.url)}`}
                                   target="_blank"
                                   rel="noreferrer"
                                   className="bg-blue-600/10 text-blue-400 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg border border-blue-900/20 text-[10px] font-bold transition-all cursor-pointer"

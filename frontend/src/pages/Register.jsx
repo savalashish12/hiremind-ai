@@ -1,4 +1,5 @@
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 import { useNavigate }
 from "react-router-dom";
@@ -36,16 +37,16 @@ const Register = () => {
         formData
       );
 
-      alert(
+      toast.success(
         "Registration successful"
       );
 
       navigate("/login");
 
     } catch (error) {
-
-      alert(
-        error.response.data.message
+      console.error("Registration failed:", error);
+      toast.error(
+        error.response?.data?.message || error.message || "Registration failed"
       );
     }
   };
