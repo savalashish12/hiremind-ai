@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
+import { NotificationContext } from "../context/NotificationContext";
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -9,23 +10,12 @@ import API from "../services/api";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Briefcase,
-  BarChart2,
   Brain,
-  Plus,
   Printer,
-  ChevronRight,
-  TrendingUp,
-  Award,
-  Users,
-  AlertCircle,
-  FileText,
   UploadCloud,
   Send,
   Trash2,
-  Calendar,
-  Layers,
-  Settings
+  Calendar
 } from "lucide-react";
 
 import CreateJobForm from "../components/CreateJobForm";
@@ -37,7 +27,7 @@ const RecruiterDashboard = () => {
   const [activeTab, setActiveTab] = useState("jobs");
   const [jobs, setJobs] = useState([]);
   const [editingJob, setEditingJob] = useState(null);
-  const [notifications, setNotifications] = useState([]);
+  const { notifications } = useContext(NotificationContext);
 
   // Upgraded Analytics State
   const [analytics, setAnalytics] = useState({
@@ -93,20 +83,10 @@ const RecruiterDashboard = () => {
     }
   };
 
-  const fetchNotifications = async () => {
-    try {
-      const res = await API.get("/notifications");
-      setNotifications(res.data);
-    } catch (err) {
-      console.log("Failed to fetch notifications:", err);
-    }
-  };
-
   useEffect(() => {
     fetchRecruiterJobs();
     fetchAnalytics();
     fetchDocuments();
-    fetchNotifications();
   }, [location.pathname, location.key]);
 
   const updateJobStatus = async (jobId, newStatus) => {
@@ -127,7 +107,7 @@ const RecruiterDashboard = () => {
       toast.success("Job deleted successfully");
       fetchRecruiterJobs();
       fetchAnalytics();
-    } catch (error) {
+    } catch {
       toast.error("Failed to delete job");
     }
   };
@@ -179,7 +159,9 @@ const RecruiterDashboard = () => {
 
     try {
       const res = await API.post("/ai/knowledge/ask", { question: userMsg });
-      setChatHistory(prev => [...prev, { sender: "ai", text: res.data.answer }]);
+      // New API returns { answer, sources, retrievedChunks }; old fallback is a plain string
+      const answer = typeof res.data?.answer === "string" ? res.data.answer : res.data?.answer || "No answer returned.";
+      setChatHistory(prev => [...prev, { sender: "ai", text: answer, sources: res.data?.sources || [] }]);
     } catch (error) {
       setChatHistory(prev => [...prev, { sender: "ai", text: error.response?.data?.message || "Failed to query documents." }]);
     } finally {
@@ -359,7 +341,7 @@ const RecruiterDashboard = () => {
             </div>
 
             {/* Metrics cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 print:grid-cols-4 print:gap-4 text-left">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 print:grid-cols-4 print:gap-4 text-left">
               <div className="bg-slate-900/60 p-6 rounded-2xl border border-slate-850 shadow-md print:bg-white print:text-black print:border-gray-300">
                 <span className="text-3xl font-extrabold text-blue-400">{analytics.totalJobsPosted}</span>
                 <p className="mt-1 text-slate-400 text-xs print:text-gray-650">Total Vacancies ({analytics.activeJobs} Active)</p>
@@ -383,8 +365,8 @@ const RecruiterDashboard = () => {
               {/* Line chart: Applications vs Hires */}
               <div className="lg:col-span-2 bg-slate-900/40 backdrop-blur-md p-6 rounded-2xl border border-slate-850 shadow-md print:bg-white print:border-gray-300 text-left">
                 <h3 className="text-sm font-bold text-white mb-6 print:text-black">Applications Trend Timeline</h3>
-                <div className="h-[280px]">
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="h-[250px]">
+                  <ResponsiveContainer width="100%" height={250}>
                     <LineChart data={analytics.monthlyTrends || []}>
                       <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                       <XAxis dataKey="month" stroke="#64748b" tick={{ fontSize: 10 }} />
@@ -400,11 +382,11 @@ const RecruiterDashboard = () => {
               {/* Donut chart: Stages */}
               <div className="lg:col-span-1 bg-slate-900/40 backdrop-blur-md p-6 rounded-2xl border border-slate-850 shadow-md print:bg-white print:border-gray-300 text-left">
                 <h3 className="text-sm font-bold text-white mb-6 print:text-black">Applications Stages Compliancy</h3>
-                <div className="h-[280px] flex items-center justify-center">
+                <div className="h-[250px] flex items-center justify-center">
                   {pieData.length === 0 ? (
                     <p className="text-slate-500 text-center py-20 text-xs">No stage metrics logged.</p>
                   ) : (
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height={250}>
                       <PieChart>
                         <Pie
                           data={pieData}
@@ -431,11 +413,11 @@ const RecruiterDashboard = () => {
               {/* Bar chart: Top Jobs */}
               <div className="lg:col-span-2 bg-slate-900/40 backdrop-blur-md p-6 rounded-2xl border border-slate-850 shadow-md print:bg-white print:border-gray-300 text-left">
                 <h3 className="text-sm font-bold text-white mb-6 print:text-black">Top Jobs Sourcing Volume</h3>
-                <div className="h-[280px]">
+                <div className="h-[250px]">
                   {analytics.topJobs?.length === 0 ? (
                     <p className="text-slate-500 text-center py-20 text-xs">No application logs across job vacancies.</p>
                   ) : (
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height={250}>
                       <BarChart data={analytics.topJobs || []}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
                         <XAxis dataKey="jobTitle" stroke="#64748b" tick={{ fontSize: 9 }} />
@@ -596,7 +578,7 @@ const RecruiterDashboard = () => {
                       <div key={d.id} className="bg-slate-950 p-3 rounded-xl border border-slate-850 flex justify-between items-center text-[11px] gap-3">
                         <div className="truncate">
                           <p className="font-bold text-slate-200 truncate" title={d.title}>{d.title}</p>
-                          <span className="text-[9px] text-slate-500 font-bold uppercase">{d.category}</span>
+                          <span className="text-[9px] text-slate-500 font-bold uppercase">{d.category}{d.content ? ` · ~${Math.ceil(d.content.length / 900)} chunks` : ""}</span>
                         </div>
                         <button
                           onClick={() => handleDocDelete(d.id)}
@@ -635,7 +617,18 @@ const RecruiterDashboard = () => {
                           ? "bg-blue-600 text-white rounded-tr-none shadow-md"
                           : "bg-slate-950 text-slate-350 border border-slate-850 rounded-tl-none leading-relaxed shadow-sm"
                       }`}>
-                        {chat.text}
+                        <p className="whitespace-pre-wrap">{chat.text}</p>
+                        {chat.sender !== "recruiter" && chat.sources?.length > 0 && (
+                          <div className="mt-2.5 pt-2 border-t border-slate-800 space-y-1">
+                            <p className="text-[9px] font-bold uppercase tracking-wider text-purple-400">Sources ({chat.sources.length})</p>
+                            {chat.sources.map((s) => (
+                              <p key={s.docId} className="text-[10px] text-slate-400" title={s.excerpt}>
+                                📄 <span className="font-semibold text-slate-300">{s.title}</span>
+                                <span className="text-slate-500"> · {s.category}</span>
+                              </p>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))

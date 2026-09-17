@@ -8,8 +8,6 @@ const PublicPortfolio = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [gitStats, setGitStats] = useState(null);
-  const [fetchingGit, setFetchingGit] = useState(false);
-
   const fetchPublicPortfolio = async () => {
     setLoading(true);
     setError("");
@@ -45,7 +43,6 @@ const PublicPortfolio = () => {
   const fetchGithubStats = async (url) => {
     const username = parseGithubUsername(url);
     if (!username) return;
-    setFetchingGit(true);
     try {
       const res = await fetch(`https://api.github.com/users/${username}`);
       if (res.ok) {
@@ -61,8 +58,6 @@ const PublicPortfolio = () => {
       }
     } catch (err) {
       console.log(err);
-    } finally {
-      setFetchingGit(false);
     }
   };
 

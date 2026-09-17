@@ -16,6 +16,7 @@ const {
   scheduleInterview,
   generateOfferLetter,
   downloadOfferLetter,
+  bulkUpdateStatus,
 } = require(
   "../controllers/applicationController"
 );
@@ -25,6 +26,13 @@ router.post(
   protect,
   authorizeRoles('CANDIDATE'),
   applyToJob
+);
+
+router.patch(
+  '/bulk-status',
+  protect,
+  authorizeRoles('RECRUITER'),
+  bulkUpdateStatus
 );
 
 router.post(

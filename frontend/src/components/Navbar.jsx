@@ -1,6 +1,7 @@
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useContext, useEffect, useState, useRef } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { NotificationContext } from "../context/NotificationContext";
 import API from "../services/api";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,14 +13,12 @@ import {
   LogOut,
   LayoutDashboard,
   Briefcase,
-  Layers,
-  Info,
-  Mail,
   ChevronDown,
-  ChevronRight,
   Sun,
   Moon,
-  Sparkles
+  Sparkles,
+  Search,
+  CreditCard
 } from "lucide-react";
 
 const Navbar = () => {
@@ -27,7 +26,7 @@ const Navbar = () => {
   const location = useLocation();
   const { user, logout } = useContext(AuthContext);
 
-  const [notifications, setNotifications] = useState([]);
+  const { notifications, unreadCount, markRead, markAllRead, refresh: fetchNotifications } = useContext(NotificationContext);
   const [showNotifDropdown, setShowNotifDropdown] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -39,8 +38,10 @@ const Navbar = () => {
   useEffect(() => {
     if (theme === "light") {
       document.body.classList.add("light");
+      document.documentElement.classList.add("light");
     } else {
       document.body.classList.remove("light");
+      document.documentElement.classList.remove("light");
     }
   }, [theme]);
 
@@ -48,25 +49,15 @@ const Navbar = () => {
     const nextTheme = theme === "dark" ? "light" : "dark";
     setTheme(nextTheme);
     localStorage.setItem("theme", nextTheme);
-  };
-
-  const fetchNotifications = async () => {
-    if (!user) return;
-    try {
-      const res = await API.get("/notifications");
-      setNotifications(res.data);
-    } catch (err) {
-      console.log("Failed to fetch notifications:", err);
+    if (nextTheme === "light") {
+      document.body.classList.add("light");
+      document.documentElement.classList.add("light");
+    } else {
+      document.body.classList.remove("light");
+      document.documentElement.classList.remove("light");
     }
+    window.dispatchEvent(new Event("themeChange"));
   };
-
-  useEffect(() => {
-    if (user) {
-      fetchNotifications();
-      const interval = setInterval(fetchNotifications, 60000); // Poll every 60s
-      return () => clearInterval(interval);
-    }
-  }, [user]);
 
   // Click outside handlers
   useEffect(() => {
@@ -87,32 +78,11 @@ const Navbar = () => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
-  const markAllRead = async () => {
-    try {
-      await API.put("/notifications/read-all");
-      fetchNotifications();
-      toast.success("All notifications marked as read");
-    } catch {
-      toast.error("Failed to mark notifications");
-    }
-  };
-
-  const markRead = async (id) => {
-    try {
-      await API.put(`/notifications/${id}/read`);
-      fetchNotifications();
-    } catch {
-      console.log("Failed to mark read");
-    }
-  };
-
   const handleLogout = () => {
     logout();
     setShowUserDropdown(false);
     navigate("/login");
   };
-
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const scrollToSection = (id) => {
     if (location.pathname !== "/") {
@@ -194,6 +164,14 @@ const Navbar = () => {
             title="Toggle theme mode"
           >
             {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+          </button>
+
+          {/* Search cmdk button */}
+          <button onClick={() => document.dispatchEvent(new KeyboardEvent('keydown', { key:'k', ctrlKey:true, bubbles:true }))}
+            className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-slate-400 hover:text-white hover:border-slate-500 text-xs transition-all">
+            <Search size={12} />
+            Search
+            <kbd className="text-[9px] bg-slate-700 px-1 rounded border border-slate-600">⌘K</kbd>
           </button>
 
           {!user ? (
@@ -383,6 +361,15 @@ const Navbar = () => {
                             Admin Console
                           </Link>
                         )}
+
+                        <Link
+                          to="/payment/history"
+                          onClick={() => setShowUserDropdown(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition-all"
+                        >
+                          <CreditCard size={14} />
+                          Billing & Invoices
+                        </Link>
                         
                       </div>
 

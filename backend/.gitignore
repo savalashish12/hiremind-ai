@@ -1,4 +1,7 @@
-node_modules
+node_modules/
 .env
 uploads/
 dist/
+# Owner's personal QR source image (web copies live in uploads/ + frontend/public/)
+QR Code ashish saval.jpeg
+.gitignore

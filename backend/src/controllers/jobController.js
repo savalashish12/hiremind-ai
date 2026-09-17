@@ -64,13 +64,54 @@ const createJob = async (req, res) => {
 
 const getAllJobs = async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const { search, location, jobType, skills } = req.query;
+
+    const where = {};
+
+    if (search) {
+      where.title = { contains: search, mode: 'insensitive' };
+    }
+
+    if (location) {
+      where.location = { contains: location, mode: 'insensitive' };
+    }
+
+    if (jobType && jobType !== 'ALL') {
+      where.jobType = jobType;
+    }
+
+    if (skills) {
+      const skillsArray = Array.isArray(skills)
+        ? skills
+        : skills.split(',').map(s => s.trim()).filter(Boolean);
+      if (skillsArray.length > 0) {
+        where.skillsRequired = { hasSome: skillsArray };
+      }
+    }
+
+    const total = await prisma.job.count({ where });
     const jobs = await prisma.job.findMany({
+      where,
+      skip,
+      take: limit,
       include: {
         recruiter: true,
       },
+      orderBy: { createdAt: 'desc' },
     });
 
-    res.status(200).json(jobs);
+    const totalPages = Math.ceil(total / limit);
+
+    res.status(200).json({
+      jobs,
+      total,
+      page,
+      totalPages,
+    });
   } catch (error) {
     res.status(500).json({
       message: error.message,
@@ -333,7 +374,11 @@ const deleteJob = async (req, res) => {
 
 const getExternalJobs = async (req, res) => {
   try {
-    const { search, location, category, experienceLevel, source } = req.query;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const { search, location, category, experienceLevel, source, skills } = req.query;
 
     const where = { isActive: true };
 
@@ -361,12 +406,31 @@ const getExternalJobs = async (req, res) => {
       where.sourceType = { equals: source };
     }
 
+    if (skills) {
+      const skillsArray = Array.isArray(skills)
+        ? skills
+        : skills.split(',').map(s => s.trim()).filter(Boolean);
+      if (skillsArray.length > 0) {
+        where.skills = { hasSome: skillsArray };
+      }
+    }
+
+    const total = await prisma.externalJob.count({ where });
     const jobs = await prisma.externalJob.findMany({
       where,
+      skip,
+      take: limit,
       orderBy: { postedDate: 'desc' },
     });
 
-    res.status(200).json(jobs);
+    const totalPages = Math.ceil(total / limit);
+
+    res.status(200).json({
+      jobs,
+      total,
+      page,
+      totalPages,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: error.message });

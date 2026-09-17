@@ -241,29 +241,130 @@ Example format:
   }
 };
 
-const askKnowledgeBase = async (documents, question) => {
-  try {
-    const context = documents.map(d => `Document Title: ${d.title}\nCategory: ${d.category}\nContent:\n${d.content}`).join("\n\n---\n\n");
-    const prompt = `
-You are an AI Recruitment Knowledge Assistant.
-Answer the recruiter's question using the company documents provided as context below.
-If the documents do not contain the answer, say "I cannot find this information in the uploaded company documents, but based on general recruiting standards..." and provide general guidance.
+// ---- RAG helpers: chunk + keyword retrieve + cite ----
+const RAG_CHUNK_SIZE = 900;
+const RAG_CHUNK_OVERLAP = 150;
+const RAG_TOP_K = 5;
+const RAG_MAX_CONTEXT_CHARS = 12000;
 
-Context Documents:
+function chunkText(text, size = RAG_CHUNK_SIZE, overlap = RAG_CHUNK_OVERLAP) {
+  const clean = String(text || "").replace(/\s+/g, " ").trim();
+  if (!clean) return [];
+  const chunks = [];
+  let start = 0;
+  while (start < clean.length) {
+    const end = Math.min(clean.length, start + size);
+    chunks.push(clean.slice(start, end));
+    if (end >= clean.length) break;
+    start = end - overlap;
+  }
+  return chunks;
+}
+
+function tokenize(s) {
+  return String(s || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length > 2);
+}
+
+function scoreChunk(chunkTokens, queryTokenSet) {
+  let hits = 0;
+  for (const t of chunkTokens) if (queryTokenSet.has(t)) hits++;
+  // normalize by chunk length so short focused chunks win
+  return hits / Math.sqrt(chunkTokens.length || 1);
+}
+
+function retrieveRelevantChunks(documents, question, topK = RAG_TOP_K) {
+  const queryTokens = new Set(tokenize(question));
+  const scored = [];
+  for (const doc of documents) {
+    const chunks = chunkText(doc.content);
+    chunks.forEach((chunk, idx) => {
+      const tokens = tokenize(chunk);
+      const score = scoreChunk(tokens, queryTokens);
+      scored.push({
+        score,
+        chunk,
+        docId: doc.id,
+        title: doc.title,
+        category: doc.category,
+        chunkIndex: idx,
+      });
+    });
+  }
+  scored.sort((a, b) => b.score - a.score);
+  // Always return at least the first chunk of the first doc so small KBs still answer
+  const top = scored.slice(0, topK).filter((s) => s.score > 0);
+  if (top.length === 0 && scored.length > 0) return scored.slice(0, Math.min(2, scored.length));
+  return top;
+}
+
+function buildRagContext(picked) {
+  let context = "";
+  const sources = [];
+  for (const p of picked) {
+    const header = `[Source: ${p.title} (${p.category}) — chunk ${p.chunkIndex + 1}]\n`;
+    const piece = `${header}${p.chunk}\n\n`;
+    if ((context + piece).length > RAG_MAX_CONTEXT_CHARS) break;
+    context += piece;
+    if (!sources.find((s) => s.docId === p.docId)) {
+      sources.push({
+        docId: p.docId,
+        title: p.title,
+        category: p.category,
+        excerpt: p.chunk.slice(0, 220) + (p.chunk.length > 220 ? "…" : ""),
+      });
+    }
+  }
+  return { context, sources };
+}
+
+function localFallbackAnswer(question, picked) {
+  if (!picked.length) {
+    return "I couldn't find anything relevant in the uploaded company documents for this question. Try uploading a policy handbook, JD, or interview guideline first — or rephrase with keywords from those documents.";
+  }
+  const bullets = picked
+    .slice(0, 3)
+    .map((p) => `• From "${p.title}": ${p.chunk.slice(0, 280)}${p.chunk.length > 280 ? "…" : ""}`)
+    .join("\n");
+  return `(Offline mode — Gemini unavailable. Showing the most relevant indexed excerpts:)\n\nQuestion: ${question}\n\n${bullets}\n\nUpload more specific documents or retry when the AI service is back for a synthesized answer.`;
+}
+
+const askKnowledgeBase = async (documents, question) => {
+  const picked = retrieveRelevantChunks(documents, question);
+  const { context, sources } = buildRagContext(picked);
+  try {
+    if (!context.trim()) {
+      return {
+        answer: "I couldn't find anything relevant in the uploaded company documents. Please upload a policy, JD, or guideline covering this topic and ask again.",
+        sources: [],
+        retrievedChunks: 0,
+      };
+    }
+    const prompt = `You are an AI Recruitment Knowledge Assistant for HireMind AI.
+Answer ONLY from the retrieved context chunks below. Each chunk header shows its [Source].
+Rules:
+- If the answer is in the context, answer concisely and end with "Sources: <doc titles>".
+- Quote exact policy numbers / leave days / eligibility lines when present.
+- If the context does NOT contain the answer, say exactly: "I cannot find this information in the uploaded company documents" then add one short paragraph of general recruiting best-practice guidance clearly labeled as general guidance.
+- Never invent policy text, dates, or numbers.
+
+Retrieved context:
 ${context}
 
 Question: ${question}
 
-Answer:
-`;
+Answer:`;
     const response = await gemini.models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt,
     });
-    return response.text;
+    return { answer: response.text, sources, retrievedChunks: picked.length };
   } catch (error) {
-    console.error("Gemini Error: ", error);
-    return "Failed to query the knowledge base.";
+    console.error("Gemini RAG Error: ", error);
+    return { answer: localFallbackAnswer(question, picked), sources, retrievedChunks: picked.length, offline: true };
   }
 };
 
@@ -730,6 +831,28 @@ Return ONLY valid JSON.
   }
 };
 
+const scoreResumeWithGemini = async (resumeText, jobDescription) => {
+  try {
+    const prompt = `Compare this resume to the job description.
+Return ONLY valid JSON: {"score": <number 0-100>, "missingSkills": ["..."], "summary": "..."}
+Resume: ${resumeText}
+Job Description: ${jobDescription}`;
+
+    const response = await gemini.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json",
+      }
+    });
+
+    return JSON.parse(response.text);
+  } catch (error) {
+    console.error("Gemini ATS Scoring Error: ", error);
+    return null;
+  }
+};
+
 module.exports = {
   extractResumeData,
   generateInterviewQuestions,
@@ -745,4 +868,5 @@ module.exports = {
   rankCandidatesAI,
   generateMcqQuestionsAI,
   evaluateMcqTestAI,
+  scoreResumeWithGemini,
 };

@@ -11,7 +11,7 @@ const ResumeUpload = ({ fetchProfile, currentResumeUrl }) => {
       const decoded = decodeURIComponent(url);
       const parts = decoded.split("/");
       return parts[parts.length - 1];
-    } catch (e) {
+    } catch {
       return "Uploaded Resume";
     }
   };

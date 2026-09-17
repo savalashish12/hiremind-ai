@@ -199,18 +199,26 @@ const uploadCompanyDocument = async (req, res) => {
 
     const { title, category } = req.body;
 
+    const cleaned = String(parsedText || "").replace(/\r/g, "").trim();
+    if (cleaned.length < 20) {
+      return res.status(400).json({ message: "Document has no readable text. Upload a text-based PDF or .txt file." });
+    }
+    // Cap stored content so a 5MB handbook can't blow up the prompt window
+    const MAX_DOC_CHARS = 200000;
+    const content = cleaned.length > MAX_DOC_CHARS ? cleaned.slice(0, MAX_DOC_CHARS) : cleaned;
+
     const doc = await prisma.companyDocument.create({
       data: {
-        title: title || req.file.originalname,
-        category: category || "GENERAL",
-        content: parsedText,
+        title: (title || req.file.originalname || "Untitled").slice(0, 200),
+        category: (category || "GENERAL").toUpperCase(),
+        content,
         recruiterId: req.user.id,
       },
     });
 
     res.status(201).json({
-      message: "Document uploaded and parsed successfully",
-      document: doc,
+      message: `Document uploaded and indexed (${content.length} chars, ~${Math.ceil(content.length / 900)} chunks)`,
+      document: { ...doc, content: doc.content.slice(0, 500) },
     });
   } catch (error) {
     console.error(error);
@@ -264,12 +272,16 @@ const deleteCompanyDocument = async (req, res) => {
 const askKnowledgeAssistant = async (req, res) => {
   try {
     const { question } = req.body;
-    if (!question) {
-      return res.status(400).json({ message: "Question is required" });
+    if (!question || String(question).trim().length < 3) {
+      return res.status(400).json({ message: "Ask a specific question (min 3 characters)." });
+    }
+    if (String(question).length > 1000) {
+      return res.status(400).json({ message: "Question too long (max 1000 characters)." });
     }
 
     const documents = await prisma.companyDocument.findMany({
       where: { recruiterId: req.user.id },
+      orderBy: { createdAt: "desc" },
     });
 
     if (documents.length === 0) {
@@ -278,8 +290,9 @@ const askKnowledgeAssistant = async (req, res) => {
       });
     }
 
-    const answer = await askKnowledgeBase(documents, question);
-    res.status(200).json({ answer });
+    const result = await askKnowledgeBase(documents, String(question).trim());
+    // Back-compat: older clients read res.data.answer as string
+    res.status(200).json(result);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Knowledge base query failed" });

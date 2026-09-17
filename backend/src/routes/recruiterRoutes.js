@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const multer = require("multer");
-const path = require("path");
+const upload = require('../config/multer');
 
 const protect = require("../middleware/authMiddleware");
 const authorizeRoles = require("../middleware/roleMiddleware");
@@ -14,21 +13,8 @@ const {
   updateCompanyProfile,
   uploadCompanyLogo,
   getDashboardStats,
+  getCalendarInterviews,
 } = require("../controllers/recruiterController");
-
-// Setup simple disk storage for company logo uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "uploads/");
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-const uploadLogo = multer({
-  storage,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB limit
-});
 
 // Public company profile lookup
 router.get("/company-profile/:recruiterId", getCompanyProfile);
@@ -48,11 +34,14 @@ router.post(
   "/company-profile/logo",
   protect,
   authorizeRoles("RECRUITER"),
-  uploadLogo.single("logo"),
+  upload.single("logo"),
   uploadCompanyLogo
 );
 
 // Recruiter Dashboard Stats
 router.get("/dashboard/stats", protect, authorizeRoles("RECRUITER"), getDashboardStats);
+
+// Interview Calendar
+router.get("/interviews/calendar", protect, authorizeRoles("RECRUITER"), getCalendarInterviews);
 
 module.exports = router;

@@ -6,7 +6,7 @@ import App from "./App";
 import "./index.css";
 
 import AuthProvider from "./context/AuthContext";
-
+import NotificationProvider from "./context/NotificationContext";
 import { Toaster } from "react-hot-toast";
 
 ReactDOM.createRoot(
@@ -16,13 +16,13 @@ ReactDOM.createRoot(
   <React.StrictMode>
 
     <AuthProvider>
+      <NotificationProvider>
+        <Toaster
+          position="top-right"
+        />
 
-      <Toaster
-        position="top-right"
-      />
-
-      <App />
-
+        <App />
+      </NotificationProvider>
     </AuthProvider>
 
   </React.StrictMode>

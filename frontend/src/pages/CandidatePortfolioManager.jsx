@@ -511,7 +511,7 @@ const CandidatePortfolioManager = () => {
               {loading ? "Saving space..." : "💾 Save Portfolio to DB"}
             </button>
             <a
-              href={`/portfolio/${API.defaults.headers.common?.Authorization ? "my-portfolio" : ""}`}
+              href={`/portfolio/${localStorage.getItem("token") ? "my-portfolio" : ""}`}
               onClick={(e) => {
                 const token = localStorage.getItem("token");
                 if (token) {

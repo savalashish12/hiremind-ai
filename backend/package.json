@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "nodemon server.js",
     "seed": "node prisma/seed.js",
-    "test": "node src/utils/testSystem.js"
+    "test": "node src/utils/testSystem.js",
+    "test:unit": "node src/utils/unitTests.js",
+    "test:perf": "node src/utils/performanceTest.js",
+    "test:all": "npm run test:unit && npm run test:perf && npm run test"
   },
   "keywords": [],
   "author": "",
@@ -33,6 +36,7 @@
     "pdfkit": "^0.18.0",
     "pg": "^8.20.0",
     "prisma": "^5.22.0",
+    "razorpay": "^2.9.6",
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {

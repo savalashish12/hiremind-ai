@@ -12,6 +12,7 @@ const {
   savePortfolio,
   uploadCredentials,
   viewDocument,
+  buildResume,
 } = require("../controllers/candidateController");
 
 // Public candidate document/resume proxy viewer
@@ -28,6 +29,7 @@ router.delete("/saved-jobs/:jobId", protect, authorizeRoles("CANDIDATE"), delete
 router.get("/portfolio", protect, authorizeRoles("CANDIDATE"), getPortfolio);
 router.post("/portfolio", protect, authorizeRoles("CANDIDATE"), savePortfolio);
 router.patch("/portfolio", protect, authorizeRoles("CANDIDATE"), savePortfolio);
+router.post("/build-resume", protect, authorizeRoles("CANDIDATE"), buildResume);
 router.post(
   "/upload-credentials",
   protect,

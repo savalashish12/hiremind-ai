@@ -3,10 +3,7 @@ import { useLocation } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
 import { jsPDF } from "jspdf";
-import {
-  PieChart, Pie, Cell, ResponsiveContainer,
-  BarChart, Bar, XAxis, YAxis, Tooltip, Legend
-} from "recharts";
+// Recharts removed since charts are not rendered in this component
 
 // Static list of 300 companies for corporate mock assessment
 const COMPANIES_LIST = [
@@ -193,7 +190,7 @@ const CandidateMockInterview = () => {
   };
 
   // STEP 5: Evaluate MCQ
-  const handleSubmitMcq = async () => {
+  async function handleSubmitMcq() {
     setLoadingAction(true);
     const elapsedSeconds = 1800 - examTimer;
     try {
@@ -375,7 +372,7 @@ const CandidateMockInterview = () => {
       doc.text(`${session.confidenceScore} / 50`, 137, 96);
 
       // Feedback Details
-      let metadata = {};
+      let metadata;
       try {
         metadata = typeof session.recommendation === "string" ? JSON.parse(session.recommendation) : session.recommendation;
       } catch {

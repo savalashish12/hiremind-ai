@@ -1,28 +1,163 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { useLocation, Link } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
 import ResumeUpload from "../components/ResumeUpload";
 import { motion, AnimatePresence } from "framer-motion";
+import { NotificationContext } from "../context/NotificationContext";
 import {
-  User,
   Mail,
   LinkIcon,
   Globe,
   Award,
-  Sparkles,
   Layers,
   Calendar,
   Bell,
-  Clock,
-  Briefcase,
   ChevronRight,
-  TrendingUp,
   FileText,
-  AlertCircle,
-  MapPin,
-  ExternalLink
+  ExternalLink,
+  Compass
 } from "lucide-react";
+const ProfileCompletion = ({ profile, setActiveTab }) => {
+  if (!profile?.candidateProfile) return null;
+  const cp = profile.candidateProfile;
+  const checks = [
+    { label: 'Upload resume', done: !!cp.resumeUrl, weight: 30, action: 'resume' },
+    { label: 'Add skills', done: cp.skills?.length > 0, weight: 15, action: 'skills' },
+    { label: 'Add LinkedIn', done: !!cp.linkedinUrl, weight: 10, action: 'linkedin' },
+    { label: 'Add GitHub', done: !!cp.githubUrl, weight: 10, action: 'github' },
+    { label: 'Add education', done: !!cp.education, weight: 10, action: 'education' },
+    { label: 'Add summary', done: !!cp.professionalSummary, weight: 15, action: 'summary' },
+    { label: 'Add photo', done: !!cp.profileImage, weight: 10, action: 'photo' },
+  ];
+  const percent = checks.filter(c => c.done).reduce((a, c) => a + c.weight, 0);
+  if (percent >= 100) return null;
+  const missing = checks.filter(c => !c.done);
+
+  return (
+    <div className="bg-slate-800 border border-slate-700 rounded-2xl p-5 mb-6 animate-fade-in">
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="font-semibold text-white text-sm">Complete your profile</h3>
+        <span className="text-blue-400 font-bold text-sm">{percent}%</span>
+      </div>
+      <div className="w-full bg-slate-750 rounded-full h-2 mb-4">
+        <div className="h-2 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full transition-all duration-700"
+          style={{ width: `${percent}%` }} />
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {missing.slice(0,4).map((item, i) => (
+          <button key={i} onClick={() => setActiveTab('profile')}
+            className="text-xs px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-full transition-colors border border-slate-600 cursor-pointer">
+            + {item.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const PIPELINE_STAGES = ['Applied', 'Reviewed', 'Shortlisted', 'InterviewScheduled', 'Selected', 'Hired'];
+const STAGE_DISPLAY = {
+  Applied: 'Applied', Reviewed: 'Reviewed', Shortlisted: 'Shortlisted',
+  InterviewScheduled: 'Interview', Selected: 'Selected', Hired: 'Hired ✓'
+};
+
+const ApplicationCard = ({ app }) => {
+  const isRejected = app.pipelineStage === 'Rejected' || app.status === 'REJECTED';
+  return (
+    <div className="bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-2xl p-5 mb-4 transition-all">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h3 className="font-semibold text-white text-[15px]">{app.job?.title || 'Position'}</h3>
+          <p className="text-sm text-slate-400 mt-0.5">{app.job?.postedBy?.recruiterProfile?.companyName || app.job?.recruiter?.recruiterProfile?.companyName || 'Company'}</p>
+        </div>
+        <div className="text-right shrink-0 ml-4">
+          {app.matchScore != null && (
+            <span className={`text-xs px-2 py-1 rounded-full border font-medium ${
+              app.matchScore >= 70 ? 'text-green-400 bg-green-900/30 border-green-800' :
+              app.matchScore >= 40 ? 'text-amber-400 bg-amber-900/30 border-amber-800' :
+              'text-red-400 bg-red-900/30 border-red-800'
+            }`}>{app.matchScore}% match</span>
+          )}
+          <p className="text-[11px] text-slate-500 mt-1">
+            {new Date(app.appliedAt || app.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+          </p>
+        </div>
+      </div>
+
+      {/* Stage stepper */}
+      {isRejected ? (
+        <div className="flex items-center gap-2 text-red-400 text-sm py-2">
+          <div className="w-6 h-6 rounded-full bg-red-900/50 border border-red-700 flex items-center justify-center text-xs font-bold">✕</div>
+          Application not moved forward
+        </div>
+      ) : (
+        <div className="flex items-center overflow-x-auto pb-1">
+          {PIPELINE_STAGES.map((stage, idx) => {
+            const currentIdx = PIPELINE_STAGES.indexOf(app.pipelineStage || 'Applied');
+            const done = idx < currentIdx;
+            const active = idx === currentIdx;
+            return (
+              <div key={stage} className="flex items-center shrink-0">
+                <div className="flex flex-col items-center">
+                  <div className={`w-7 h-7 rounded-full border-2 flex items-center justify-center text-[11px] font-bold transition-all duration-500 ${
+                    done ? 'bg-green-500 border-green-500 text-white' :
+                    active ? 'border-blue-500 bg-blue-500/20 text-blue-400 shadow-[0_0_8px_rgba(59,130,246,0.5)]' :
+                    'border-slate-600 text-slate-600'
+                  }`}>
+                    {done ? '✓' : idx + 1}
+                  </div>
+                  <span className={`text-[9px] mt-1 whitespace-nowrap font-medium ${
+                    done ? 'text-green-400' : active ? 'text-blue-400' : 'text-slate-600'
+                  }`}>{STAGE_DISPLAY[stage]}</span>
+                </div>
+                {idx < PIPELINE_STAGES.length - 1 && (
+                  <div className={`w-8 h-0.5 mx-0.5 mb-3 transition-all duration-500 ${done ? 'bg-green-500' : 'bg-slate-700'}`} />
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Interview date if scheduled */}
+      {app.interviewDate && (
+        <div className="mt-3 pt-3 border-t border-slate-700/50 flex items-center gap-2 text-xs text-blue-400">
+          <span>📅</span>
+          Interview: {new Date(app.interviewDate).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}
+          {app.interviewTime && ` at ${app.interviewTime}`}
+          {app.interviewLink && (
+            <a href={app.interviewLink} target="_blank" rel="noreferrer"
+              className="ml-auto underline hover:text-blue-300">Join →</a>
+          )}
+        </div>
+      )}
+
+      {/* Offer letter block */}
+      {app.offerLetterUrl && (
+        <div className="mt-3 pt-3 border-t border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
+          <div>
+            <h5 className="font-bold text-indigo-400 flex items-center gap-1.5">
+              <FileText size={13} /> Official Offer Letter Issued
+            </h5>
+            <p className="text-slate-450 text-[10px] mt-0.5 leading-relaxed">
+              Congratulations! Issued position: <strong>{app.offerLetterDetails?.role || app.job?.title}</strong> at <strong>{app.offerLetterDetails?.companyName || "Accenture Corporate"}</strong>.
+            </p>
+          </div>
+          <a
+            href={`http://localhost:5000/api/candidate/document?url=${encodeURIComponent(app.offerLetterUrl)}`}
+            target="_blank"
+            rel="noreferrer"
+            className="bg-green-600 hover:bg-green-550 text-white font-bold px-4.5 py-2 rounded-xl transition-all shadow-md text-xs cursor-pointer inline-flex items-center gap-1 whitespace-nowrap"
+          >
+            Download PDF <ChevronRight size={12} />
+          </a>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const CandidateDashboard = () => {
   const location = useLocation();
@@ -30,7 +165,7 @@ const CandidateDashboard = () => {
   const [applications, setApplications] = useState([]);
   const [profile, setProfile] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
-  const [notifications, setNotifications] = useState([]);
+  const { notifications } = useContext(NotificationContext);
   
   // AI Suggestions
   const [aiSuggestions, setAiSuggestions] = useState(null);
@@ -48,19 +183,15 @@ const CandidateDashboard = () => {
   });
   const [savingProfile, setSavingProfile] = useState(false);
   const [history, setHistory] = useState([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const fetchHistory = async () => {
-    setLoadingHistory(true);
     try {
       const res = await API.get("/interview/history");
       if (res.data.success) {
         setHistory(res.data.data);
       }
-    } catch (err) {
+    } catch {
       console.log("Could not load interview history.");
-    } finally {
-      setLoadingHistory(false);
     }
   };
 
@@ -68,7 +199,7 @@ const CandidateDashboard = () => {
     try {
       const res = await API.get("/application/my-applications");
       setApplications(res.data);
-    } catch (error) {
+    } catch {
       toast.error("Failed to fetch applications");
     }
   };
@@ -97,15 +228,6 @@ const CandidateDashboard = () => {
       setRecommendations(res.data);
     } catch {
       console.log("Could not load recommendations.");
-    }
-  };
-
-  const fetchNotifications = async () => {
-    try {
-      const res = await API.get("/notifications");
-      setNotifications(res.data);
-    } catch (err) {
-      console.log("Failed to fetch notifications:", err);
     }
   };
 
@@ -144,7 +266,6 @@ const CandidateDashboard = () => {
     fetchApplications();
     fetchProfile();
     fetchRecommendations();
-    fetchNotifications();
     fetchHistory();
   }, [location.pathname, location.key]);
 
@@ -480,6 +601,8 @@ const CandidateDashboard = () => {
         {/* Left Column Dashboard Widgets */}
         <div className="lg:col-span-8 space-y-8 w-full">
           
+          <ProfileCompletion profile={profile} setActiveTab={setActiveTab} />
+
           {/* Tabs switch Menu */}
           <div className="flex flex-wrap gap-2.5 border-b border-slate-900 pb-3">
             <button
@@ -549,109 +672,9 @@ const CandidateDashboard = () => {
                     </div>
                   ) : (
                     <div className="grid gap-5">
-                      {applications.map((app) => {
-                        const isRejected = app.status === "REJECTED";
-                        const currentIndex = pipelineStages.indexOf(isRejected ? "REJECTED" : app.status);
-
-                        return (
-                          <div key={app.id} className="bg-slate-900/40 backdrop-blur-md p-6 rounded-2xl border border-slate-850 hover:border-slate-800 transition-colors shadow-md space-y-5">
-                            
-                            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
-                              <div>
-                                <h4 className="text-base font-bold text-white">{app.job.title}</h4>
-                                <p className="text-xs text-slate-400 mt-1 flex items-center gap-3">
-                                  <span className="flex items-center gap-0.5">📍 {app.job.location}</span>
-                                  <span className="flex items-center gap-0.5">💰 {app.job.salary}</span>
-                                </p>
-                              </div>
-                              <span className={`px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide border w-fit ${
-                                isRejected ? "bg-red-950 text-red-400 border-red-900/30" :
-                                app.status === "HIRED" ? "bg-green-950 text-green-400 border-green-900/30" : "bg-blue-950 text-blue-400 border-blue-900/30"
-                              }`}>
-                                {app.status}
-                              </span>
-                            </div>
-
-                            {/* Timeline Status */}
-                            <div className="relative py-2.5">
-                              <div className="absolute top-1/2 left-0 right-0 h-1 bg-slate-950 -translate-y-1/2 rounded-full"></div>
-                              <div
-                                className="absolute top-1/2 left-0 h-1 bg-blue-500 -translate-y-1/2 rounded-full transition-all duration-500"
-                                style={{
-                                  width: `${(Math.max(0, isRejected ? 2 : currentIndex) / (pipelineStages.length - 1)) * 100}%`,
-                                }}
-                              ></div>
-                              <div className="flex justify-between items-center relative z-10">
-                                {pipelineStages.map((stage, idx) => {
-                                  const isDone = idx <= currentIndex;
-                                  const isCurrent = stage === app.status;
-                                  return (
-                                    <div key={idx} className="flex flex-col items-center">
-                                      <div className={`w-5.5 h-5.5 rounded-full flex items-center justify-center text-[9px] font-bold transition-all ring-4 ring-slate-900 ${
-                                        isRejected && idx >= 2 ? "bg-red-500 text-white" :
-                                        isCurrent ? "bg-blue-500 text-white" :
-                                        isDone ? "bg-blue-600 text-white" : "bg-slate-800 text-slate-500"
-                                      }`}>
-                                        {isDone ? "✓" : idx + 1}
-                                      </div>
-                                      <span className="text-[9px] text-slate-500 mt-2 hidden md:inline font-semibold">
-                                        {stage.replace("_", " ")}
-                                      </span>
-                                    </div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-
-                            {/* Interview block */}
-                            {app.interviewDate && (
-                              <div className="bg-slate-950/60 p-4 rounded-xl border border-blue-500/10 text-xs text-slate-350 space-y-2">
-                                <h5 className="font-bold text-blue-400 flex items-center gap-1.5">
-                                  <Calendar size={13} /> Scheduled Interview Details
-                                </h5>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] leading-relaxed">
-                                  <p>📅 <strong>Date:</strong> {new Date(app.interviewDate).toLocaleDateString()}</p>
-                                  <p>🕒 <strong>Time:</strong> {app.interviewTime || "Scheduled time"}</p>
-                                  <p className="md:col-span-2">
-                                    🔗 <strong>Meeting Link:</strong>{" "}
-                                    <a href={app.interviewLink} target="_blank" rel="noreferrer" className="text-blue-400 hover:underline font-bold break-all">
-                                      {app.interviewLink}
-                                    </a>
-                                  </p>
-                                  {app.interviewerNotes && (
-                                    <p className="md:col-span-2 pt-1 border-t border-slate-900 text-slate-500">
-                                      📝 <strong>HR Notes:</strong> {app.interviewerNotes}
-                                    </p>
-                                  )}
-                                </div>
-                              </div>
-                            )}
-
-                            {/* Offer letter block */}
-                            {app.offerLetterUrl && (
-                              <div className="bg-slate-950/60 p-4 rounded-xl border border-indigo-500/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
-                                <div>
-                                  <h5 className="font-bold text-indigo-400 flex items-center gap-1.5">
-                                    <FileText size={13} /> Official Offer Letter Issued
-                                  </h5>
-                                  <p className="text-slate-500 text-[10px] mt-0.5 leading-relaxed">
-                                    Congratulations! Issued position: <strong>{app.offerLetterDetails?.role || app.job.title}</strong> at <strong>{app.offerLetterDetails?.companyName || "Accenture Corporate"}</strong>.
-                                  </p>
-                                </div>
-                                <a
-                                  href={`http://localhost:5000/api/candidate/document?url=${encodeURIComponent(app.offerLetterUrl)}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="bg-green-600 hover:bg-green-550 text-white font-bold px-4.5 py-2 rounded-xl transition-all shadow-md text-xs cursor-pointer inline-flex items-center gap-1 whitespace-nowrap"
-                                >
-                                  Download PDF <ChevronRight size={12} />
-                                </a>
-                              </div>
-                            )}
-
-                          </div>
-                        );
-                      })}
+                      {applications.map((app) => (
+                        <ApplicationCard key={app.id} app={app} />
+                      ))}
                     </div>
                   )}
                 </motion.div>

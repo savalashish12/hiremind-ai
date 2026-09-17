@@ -3,6 +3,7 @@ const { generateCoverLetterAI } = require("../services/aiService");
 const cloudinary = require("../config/cloudinary");
 const fs = require("fs");
 const axios = require("axios");
+const PDFDocument = require("pdfkit");
 
 // Cover Letter Generator
 const generateCoverLetter = async (req, res) => {
@@ -423,6 +424,190 @@ const viewDocument = async (req, res) => {
   }
 };
 
+const buildResume = async (req, res) => {
+  try {
+    const { fullName, email, phone, summary, experience, education, skills, certifications } = req.body;
+
+    if (!fullName || !email) {
+      return res.status(400).json({ message: "Full Name and Email are required" });
+    }
+
+    const doc = new PDFDocument({ margin: 50 });
+    let chunks = [];
+    doc.on("data", (chunk) => chunks.push(chunk));
+
+    const pdfBufferPromise = new Promise((resolve, reject) => {
+      doc.on("end", () => resolve(Buffer.concat(chunks)));
+      doc.on("error", (err) => reject(err));
+    });
+
+    // Color definitions
+    const textColor = "#1e293b";
+    const headingColor = "#3b82f6";
+    const secondaryColor = "#64748b";
+    const borderColor = "#cbd5e1";
+
+    // 1. Header
+    doc.fillColor(textColor);
+    doc.fontSize(24).font("Helvetica-Bold").text(fullName, { align: "center" });
+    doc.moveDown(0.2);
+    
+    doc.fillColor(secondaryColor);
+    doc.fontSize(10).font("Helvetica").text(`${email}  |  ${phone || ""}`, { align: "center" });
+    doc.moveDown(1.5);
+
+    // 2. Summary
+    if (summary) {
+      doc.fillColor(headingColor).fontSize(12).font("Helvetica-Bold").text("PROFESSIONAL SUMMARY");
+      doc.strokeColor(borderColor).lineWidth(1).moveTo(50, doc.y).lineTo(560, doc.y).stroke();
+      doc.moveDown(0.5);
+      
+      doc.fillColor(textColor).fontSize(10).font("Helvetica").text(summary, { lineGap: 3 });
+      doc.moveDown(1.5);
+    }
+
+    // 3. Experience
+    if (experience && Array.isArray(experience) && experience.length > 0) {
+      doc.fillColor(headingColor).fontSize(12).font("Helvetica-Bold").text("WORK EXPERIENCE");
+      doc.strokeColor(borderColor).lineWidth(1).moveTo(50, doc.y).lineTo(560, doc.y).stroke();
+      doc.moveDown(0.5);
+
+      experience.forEach((exp) => {
+        if (!exp.role && !exp.company) return;
+        
+        const currentY = doc.y;
+        doc.fillColor(textColor).fontSize(10).font("Helvetica-Bold");
+        doc.text(exp.role || "", 50, currentY);
+        
+        const roleWidth = doc.widthOfString(exp.role || "");
+        doc.fillColor(secondaryColor).font("Helvetica").text(` at ${exp.company || ""}`, 50 + roleWidth, currentY);
+        
+        doc.fillColor(secondaryColor).font("Helvetica").text(exp.duration || "", 400, currentY, { align: "right", width: 160 });
+        doc.moveDown(0.3);
+
+        doc.fillColor(textColor).fontSize(10).font("Helvetica");
+        if (exp.description) {
+          const bullets = exp.description.split("\n").map(b => b.trim()).filter(Boolean);
+          bullets.forEach((bullet) => {
+            doc.text(`• ${bullet}`, 60, doc.y, { lineGap: 2 });
+          });
+        }
+        doc.moveDown(0.8);
+      });
+      doc.x = 50; // Reset X
+      doc.moveDown(0.7);
+    }
+
+    // 4. Education
+    if (education && Array.isArray(education) && education.length > 0) {
+      doc.fillColor(headingColor).fontSize(12).font("Helvetica-Bold").text("EDUCATION");
+      doc.strokeColor(borderColor).lineWidth(1).moveTo(50, doc.y).lineTo(560, doc.y).stroke();
+      doc.moveDown(0.5);
+
+      education.forEach((edu) => {
+        if (!edu.institution && !edu.degree) return;
+        doc.fillColor(textColor).fontSize(10).font("Helvetica-Bold").text(edu.degree || "", { continued: true });
+        doc.fillColor(secondaryColor).font("Helvetica").text(` from ${edu.institution || ""} (${edu.year || ""})`);
+        doc.moveDown(0.5);
+      });
+      doc.moveDown(1);
+    }
+
+    // 5. Skills
+    if (skills) {
+      doc.fillColor(headingColor).fontSize(12).font("Helvetica-Bold").text("KEY SKILLS");
+      doc.strokeColor(borderColor).lineWidth(1).moveTo(50, doc.y).lineTo(560, doc.y).stroke();
+      doc.moveDown(0.5);
+
+      const skillsArray = Array.isArray(skills) 
+        ? skills 
+        : skills.split(",").map((s) => s.trim()).filter(Boolean);
+
+      doc.fillColor(textColor).fontSize(10).font("Helvetica");
+      // Render in two columns
+      const mid = Math.ceil(skillsArray.length / 2);
+      const col1 = skillsArray.slice(0, mid).join(", ");
+      const col2 = skillsArray.slice(mid).join(", ");
+      
+      const skillY = doc.y;
+      if (col1) doc.text(col1, 50, skillY, { width: 240 });
+      if (col2) doc.text(col2, 310, skillY, { width: 240 });
+      
+      doc.x = 50;
+      doc.y = skillY + Math.max(doc.heightOfString(col1, { width: 240 }), doc.heightOfString(col2, { width: 240 }));
+      doc.moveDown(1.5);
+    }
+
+    // 6. Certifications
+    if (certifications) {
+      doc.fillColor(headingColor).fontSize(12).font("Helvetica-Bold").text("CERTIFICATIONS");
+      doc.strokeColor(borderColor).lineWidth(1).moveTo(50, doc.y).lineTo(560, doc.y).stroke();
+      doc.moveDown(0.5);
+
+      const certsArray = Array.isArray(certifications)
+        ? certifications
+        : certifications.split(",").map((c) => c.trim()).filter(Boolean);
+
+      doc.fillColor(textColor).fontSize(10).font("Helvetica");
+      certsArray.forEach((cert) => {
+        doc.text(`• ${cert}`, 60, doc.y, { lineGap: 2 });
+      });
+      doc.x = 50;
+    }
+
+    doc.end();
+
+    const pdfBuffer = await pdfBufferPromise;
+
+    // Upload buffer to Cloudinary
+    const uploadResult = await new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: "hiremind/built-resumes",
+          resource_type: "raw",
+          format: "pdf",
+        },
+        (error, result) => {
+          if (error) reject(error);
+          else resolve(result);
+        }
+      );
+      uploadStream.write(pdfBuffer);
+      uploadStream.end();
+    });
+
+    const resumeUrl = uploadResult.secure_url;
+
+    // Save Cloudinary URL to CandidateProfile
+    await prisma.candidateProfile.upsert({
+      where: { userId: req.user.id },
+      update: {
+        resumeUrl,
+        skills: Array.isArray(skills) ? skills : skills?.split(",").map(s => s.trim()).filter(Boolean) || [],
+        education: education && education.length > 0 ? `${education[0].degree} from ${education[0].institution} (${education[0].year})` : undefined,
+        experience: experience && experience.length > 0 ? `${experience[0].role} at ${experience[0].company} (${experience[0].duration})` : undefined,
+        professionalSummary: summary || undefined,
+      },
+      create: {
+        userId: req.user.id,
+        resumeUrl,
+        skills: Array.isArray(skills) ? skills : skills?.split(",").map(s => s.trim()).filter(Boolean) || [],
+        education: education && education.length > 0 ? `${education[0].degree} from ${education[0].institution} (${education[0].year})` : "",
+        experience: experience && experience.length > 0 ? `${experience[0].role} at ${experience[0].company} (${experience[0].duration})` : "",
+        professionalSummary: summary || "",
+      },
+    });
+
+    res.status(200).json({
+      resumeUrl,
+      message: "Resume built and saved successfully",
+    });
+  } catch (error) {
+    console.error("Build Resume Error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   generateCoverLetter,
   toggleSavedJob,
@@ -432,4 +617,5 @@ module.exports = {
   savePortfolio,
   uploadCredentials,
   viewDocument,
+  buildResume,
 };

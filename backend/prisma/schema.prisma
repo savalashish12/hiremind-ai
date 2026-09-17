@@ -33,6 +33,9 @@ model User {
   role        Role
   isSuspended Boolean  @default(false)
   createdAt   DateTime @default(now())
+  subscriptionTier   String   @default("FREE")
+  subscriptionEndsAt DateTime?
+  razorpayOrderId    String?
 
   candidateProfile CandidateProfile?
   recruiterProfile RecruiterProfile?
@@ -45,6 +48,8 @@ model User {
   savedJobs        SavedJob[]
   notifications    Notification[]
   companyDocuments CompanyDocument[]
+  subscription     Subscription?
+  payments         Payment[]
 }
 
 model CandidateProfile {
@@ -68,7 +73,7 @@ model CandidateProfile {
   certUrls  Json?
   createdAt   DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model RecruiterProfile {
@@ -82,7 +87,7 @@ model RecruiterProfile {
   companySize String?
   createdAt   DateTime @default(now())
 
-  user User @relation(fields: [userId], references: [id])
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Job {
@@ -97,7 +102,7 @@ model Job {
   createdAt     DateTime @default(now())
 
   recruiterId String
-  recruiter   User @relation(fields: [recruiterId], references: [id])
+  recruiter   User @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
 
   applications Application[]
   savedJobs    SavedJob[]
@@ -120,8 +125,8 @@ model Application {
 
   createdAt    DateTime @default(now())
 
-  candidate User @relation(fields: [candidateId], references: [id])
-  job Job @relation(fields: [jobId], references: [id])
+  candidate User @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
   recruiterNotes String?
   offerLetterUrl String?
   offerLetterDetails Json?
@@ -138,8 +143,8 @@ model SavedJob {
   jobId        String
   createdAt    DateTime @default(now())
 
-  candidate User @relation(fields: [candidateId], references: [id])
-  job Job @relation(fields: [jobId], references: [id])
+  candidate User @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  job Job @relation(fields: [jobId], references: [id], onDelete: Cascade)
 
   @@unique([candidateId, jobId])
   @@index([candidateId])
@@ -181,7 +186,7 @@ model MockInterview {
   overallRating       String
   recommendation      String
   createdAt           DateTime @default(now())
-  candidate           User     @relation(fields: [candidateId], references: [id])
+  candidate           User     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
 }
 
 model CompanyProfile {
@@ -195,7 +200,7 @@ model CompanyProfile {
   about       String?
   location    String?
   founded     String?
-  recruiter   User    @relation(fields: [recruiterId], references: [id])
+  recruiter   User    @relation(fields: [recruiterId], references: [id], onDelete: Cascade)
 }
 
 model CandidatePortfolio {
@@ -207,7 +212,7 @@ model CandidatePortfolio {
   projects       Json?
   certifications Json?
   achievements   Json?
-  candidate      User     @relation(fields: [candidateId], references: [id])
+  candidate      User     @relation(fields: [candidateId], references: [id], onDelete: Cascade)
 }
 
 model ExternalJob {
@@ -242,4 +247,39 @@ model ActivityLog {
   details    String
   userId     String
   createdAt  DateTime @default(now())
+}
+
+model Subscription {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  planName   String
+  startDate  DateTime @default(now())
+  expiryDate DateTime
+  status     String   // "ACTIVE", "EXPIRED", "CANCELLED"
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id            String   @id @default(uuid())
+  userId        String
+  transactionId String   @unique
+  paymentMethod String
+  amount        Float
+  status        String   // "SUCCESS", "FAILED", "PENDING", "REJECTED"
+  createdAt     DateTime @default(now())
+
+  // Manual UPI fields (nullable for legacy fake/razorpay rows)
+  planName      String?
+  billingCycle  String?
+  orderId       String?
+  payerUpi      String?
+  adminNote     String?
+  reviewedAt    DateTime?
+  reviewedBy    String?
+
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
 }

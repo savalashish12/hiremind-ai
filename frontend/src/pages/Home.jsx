@@ -13,11 +13,8 @@ import {
   CloudLightning,
   ChevronDown,
   ArrowRight,
-  ShieldCheck,
-  Users,
   User,
   Sparkles,
-  Compass,
   Laptop
 } from "lucide-react";
 

@@ -5,13 +5,32 @@ import toast from "react-hot-toast";
 const AtsScoreDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [atsData, setAtsData] = useState(null);
+  const [isCached, setIsCached] = useState(false);
 
-  const fetchAtsAnalysis = async () => {
+  const fetchAtsAnalysis = async (force = false) => {
+    const cacheKey = 'hiremind_ats_cache';
+    if (!force) {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          const { data, timestamp } = JSON.parse(cached);
+          if (Date.now() - timestamp < 5 * 60 * 1000) {
+            setAtsData(data);
+            setIsCached(true);
+            return;
+          }
+        } catch (e) {
+          console.error("Failed to parse cached ATS data", e);
+        }
+      }
+    }
     setLoading(true);
     try {
       const res = await API.post("/ats/analyze");
       if (res.data.success) {
         setAtsData(res.data.data);
+        setIsCached(false);
+        localStorage.setItem(cacheKey, JSON.stringify({ data: res.data.data, timestamp: Date.now() }));
         toast.success("Resume ATS Score calculated!");
       } else {
         toast.error(res.data.message || "Failed to analyze resume");
@@ -25,7 +44,7 @@ const AtsScoreDashboard = () => {
   };
 
   useEffect(() => {
-    fetchAtsAnalysis();
+    fetchAtsAnalysis(false);
   }, []);
 
   const getBreakdownColor = (score) => {
@@ -51,13 +70,18 @@ const AtsScoreDashboard = () => {
             AI-powered scanning to align your resume with modern applicant tracking systems.
           </p>
         </div>
-        <button
-          onClick={fetchAtsAnalysis}
-          disabled={loading}
-          className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-2"
-        >
-          {loading ? "Analyzing..." : "🔄 Re-Analyze Resume"}
-        </button>
+        <div className="flex items-center gap-3">
+          {isCached && (
+            <span className="text-xs text-slate-500 italic">Showing cached result</span>
+          )}
+          <button
+            onClick={() => fetchAtsAnalysis(true)}
+            disabled={loading}
+            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold px-6 py-3 rounded-xl transition-all shadow-md active:scale-95 flex items-center gap-2"
+          >
+            {loading ? "Analyzing..." : "🔄 Re-Analyze Resume"}
+          </button>
+        </div>
       </div>
 
       {loading && (

@@ -224,20 +224,57 @@ const uploadCompanyLogo = async (req, res) => {
       return res.status(400).json({ success: false, message: "No logo image file uploaded" });
     }
 
-    const filePath = req.file.path;
-    const uploadedFile = await cloudinary.uploader.upload(filePath, {
-      folder: "company-logos",
-    });
+    let logoUrl;
+    if (req.file.buffer) {
+      // Memory storage stream upload
+      const result = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            folder: "hiremind/logos",
+            resource_type: "image",
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        uploadStream.write(req.file.buffer);
+        uploadStream.end();
+      });
+      logoUrl = result.secure_url;
+    } else if (req.file.path) {
+      // Disk storage upload
+      const result = await cloudinary.uploader.upload(req.file.path, {
+        folder: "hiremind/logos",
+        resource_type: "image",
+      });
+      logoUrl = result.secure_url;
 
-    // delete temp local file
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
+      // Delete temp local file
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid file uploaded" });
     }
+
+    // Save logoUrl to the CompanyProfile record in the database
+    await prisma.companyProfile.upsert({
+      where: { recruiterId: req.user.id },
+      update: {
+        logo: logoUrl,
+      },
+      create: {
+        recruiterId: req.user.id,
+        companyName: "My Company",
+        logo: logoUrl,
+      },
+    });
 
     res.status(200).json({
       success: true,
       data: {
-        url: uploadedFile.secure_url,
+        url: logoUrl,
       },
     });
   } catch (error) {
@@ -404,6 +441,51 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
+const getCalendarInterviews = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    if (!startDate || !endDate) {
+      return res.status(400).json({ success: false, message: "startDate and endDate are required" });
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    start.setHours(0, 0, 0, 0);
+    end.setHours(23, 59, 59, 999);
+
+    const applications = await prisma.application.findMany({
+      where: {
+        job: {
+          recruiterId: req.user.id,
+        },
+        interviewDate: {
+          gte: start,
+          lte: end,
+        },
+      },
+      include: {
+        candidate: true,
+        job: true,
+      },
+    });
+
+    const interviews = applications.map((app) => ({
+      id: app.id,
+      candidateName: app.candidate.fullName,
+      jobTitle: app.job.title,
+      interviewDate: app.interviewDate,
+      interviewTime: app.interviewTime,
+      interviewLink: app.interviewLink,
+      interviewerNotes: app.interviewerNotes,
+    }));
+
+    res.status(200).json(interviews);
+  } catch (error) {
+    console.error("Calendar interviews error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 module.exports = {
   rankCandidates,
   getPipeline,
@@ -413,4 +495,5 @@ module.exports = {
   updateCompanyProfile,
   uploadCompanyLogo,
   getDashboardStats,
+  getCalendarInterviews,
 };

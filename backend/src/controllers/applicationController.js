@@ -7,6 +7,7 @@ const pdfParse = require('pdf-parse');
 
 const {
   extractResumeData,
+  scoreResumeWithGemini,
 } = require('../services/aiService');
 
 const prisma = require('../config/prisma');
@@ -49,7 +50,7 @@ const applyToJob = async (req, res) => {
       return res.status(404).json({ message: "Job not found" });
     }
 
-    const candidateSkills =
+        const candidateSkills =
       candidateProfile?.skills || [];
 
     const candidateExperience =
@@ -58,13 +59,49 @@ const applyToJob = async (req, res) => {
     const candidateEducation =
       candidateProfile?.education || "";
 
-    const matchResult =
+    // 1. Calculate heuristic as fallback
+    const heuristicMatch =
       calculateMatchScore(
         candidateSkills,
         job.skillsRequired,
         candidateExperience,
         candidateEducation
       );
+
+    let finalScore = heuristicMatch.score;
+    let finalFeedback = heuristicMatch.feedback;
+
+    // 2. Attempt Gemini ATS match
+    if (candidateProfile) {
+      const resumeText = `
+Skills: ${(candidateProfile.skills || []).join(", ")}
+Professional Summary: ${candidateProfile.professionalSummary || "No summary"}
+Experience: ${candidateProfile.experience || "No experience summary"}
+Education: ${candidateProfile.education || "No education details"}
+Strengths: ${(candidateProfile.strengths || []).join(", ")}
+Weaknesses: ${(candidateProfile.weaknesses || []).join(", ")}
+`;
+
+      const jobDescriptionText = `
+Title: ${job.title}
+Description: ${job.description}
+Skills Required: ${(job.skillsRequired || []).join(", ")}
+Location: ${job.location}
+`;
+
+      try {
+        const geminiResult = await scoreResumeWithGemini(resumeText, jobDescriptionText);
+        if (geminiResult && typeof geminiResult.score === "number") {
+          finalScore = geminiResult.score;
+          const missing = geminiResult.missingSkills && geminiResult.missingSkills.length > 0
+            ? `\nMissing Skills: ${geminiResult.missingSkills.join(", ")}`
+            : "";
+          finalFeedback = `${geminiResult.summary || "AI match evaluation completed."}${missing}`;
+        }
+      } catch (err) {
+        console.error("Gemini match calculation failed. Using fallback.", err);
+      }
+    }
     
     const existingApplication =
       await prisma.application.findFirst({
@@ -88,9 +125,9 @@ const applyToJob = async (req, res) => {
             req.user.id,
           jobId,
           matchScore:
-            matchResult.score,
+            finalScore,
           aiFeedback:
-            matchResult.feedback,
+            finalFeedback,
         },
       });
 
@@ -114,7 +151,7 @@ const applyToJob = async (req, res) => {
       message:
         'Applied successfully',
       matchScore:
-        matchResult.score,
+        application.matchScore || finalScore,
       application,
     });
 
@@ -560,6 +597,22 @@ const downloadOfferLetter = async (req, res) => {
   }
 };
 
+const bulkUpdateStatus = async (req, res) => {
+  try {
+    const { applicationIds, stage } = req.body;
+    if (!applicationIds?.length || !stage) {
+      return res.status(400).json({ success: false, message: 'applicationIds array and stage are required' });
+    }
+    const result = await prisma.application.updateMany({
+      where: { id: { in: applicationIds } },
+      data: { pipelineStage: stage }
+    });
+    res.json({ success: true, updated: result.count });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 module.exports = {
   applyToJob,
   uploadResume,
@@ -569,4 +622,5 @@ module.exports = {
   scheduleInterview,
   generateOfferLetter,
   downloadOfferLetter,
+  bulkUpdateStatus,
 };

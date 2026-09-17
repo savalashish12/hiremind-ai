@@ -12,6 +12,11 @@ const STAGES = [
   { key: "Hired", label: "Hired", color: "border-t-green-500 bg-green-950/20" },
 ];
 
+const getInitials = (name = '') => name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'HM';
+const getAvatarBg = (score) => score >= 70 ? 'bg-green-700' : score >= 40 ? 'bg-amber-700' : score != null ? 'bg-red-700' : 'bg-slate-600';
+const getScoreStyle = (score) => score >= 70 ? 'text-green-400 bg-green-900/40 border-green-800' : score >= 40 ? 'text-amber-400 bg-amber-900/40 border-amber-800' : 'text-red-400 bg-red-900/40 border-red-800';
+const daysAgo = (date) => Math.max(0, Math.floor((Date.now() - new Date(date)) / 86400000));
+
 const JobPipelineKanban = () => {
   const { jobId } = useParams();
   const [applications, setApplications] = useState([]);
@@ -100,6 +105,39 @@ const JobPipelineKanban = () => {
       return current === stageKey;
     });
   };
+  const KanbanCard = ({ app }) => {
+    return (
+      <div
+        draggable
+        onDragStart={e => handleDragStart(e, app.id)}
+        className="bg-slate-800 border border-slate-700 rounded-xl p-3 mb-2 cursor-grab active:cursor-grabbing hover:border-slate-500 transition-all group select-none"
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <div className={`w-8 h-8 rounded-full ${getAvatarBg(app.matchScore)} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
+            {getInitials(app.candidate?.user?.fullName || app.candidate?.fullName)}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-white truncate leading-tight">
+              {app.candidate?.user?.fullName || app.candidate?.fullName || 'Candidate'}
+            </p>
+            <p className="text-[10px] text-slate-500">{daysAgo(app.createdAt || app.appliedAt)}d in stage</p>
+          </div>
+        </div>
+        {app.matchScore != null && (
+          <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${getScoreStyle(app.matchScore)}`}>
+            {app.matchScore}% match
+          </span>
+        )}
+        <div className="hidden group-hover:flex gap-1 mt-2 pt-2 border-t border-slate-700/50">
+          <a href={`/applicants/${app.jobId}`}
+            onClick={e => e.stopPropagation()}
+            className="flex-1 text-center text-[10px] py-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300 transition-colors">
+            View Profile
+          </a>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="p-10 max-w-[95vw] mx-auto text-white">
@@ -125,7 +163,7 @@ const JobPipelineKanban = () => {
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-6 items-start">
+        <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory -mx-4 px-4">
           {STAGES.map((stage) => {
             const stageApps = getAppsForStage(stage.key);
             return (
@@ -133,57 +171,25 @@ const JobPipelineKanban = () => {
                 key={stage.key}
                 onDragOver={handleDragOver}
                 onDrop={(e) => handleDrop(e, stage.key)}
-                className={`flex flex-col rounded-2xl border-t-4 border border-slate-800/80 shadow-lg min-h-[500px] transition-all p-4 ${stage.color}`}
+                className={`min-w-[260px] snap-start flex-shrink-0 flex flex-col rounded-2xl border-t-4 border border-slate-800/80 shadow-lg min-h-[500px] transition-all p-4 ${stage.color}`}
               >
                 {/* Column Title Header */}
-                <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-850">
-                  <span className="font-bold text-xs uppercase tracking-wider text-slate-200">{stage.label}</span>
-                  <span className="bg-slate-850 px-2 py-0.5 rounded text-[10px] font-bold text-slate-400">
-                    {stageApps.length}
+                <div className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                  <span>
+                    {stage.label}
+                    <span className="bg-slate-700 text-slate-400 text-[10px] px-2 py-0.5 rounded-full ml-2">
+                      {applications.filter(a => (a.pipelineStage || 'Applied') === stage.key).length}
+                    </span>
                   </span>
                 </div>
 
                 {/* Cards Container */}
-                <div className="flex-1 space-y-3.5 overflow-y-auto">
+                <div className="flex-1 space-y-3.5 overflow-y-auto mt-3">
                   {stageApps.length === 0 ? (
                     <div className="text-center py-10 text-[10px] text-slate-600 font-medium">Drop candidates here</div>
                   ) : (
                     stageApps.map((app) => (
-                      <div
-                        key={app.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, app.id)}
-                        className="bg-slate-900 border border-slate-850 p-4 rounded-xl hover:border-slate-750 transition-all cursor-grab active:cursor-grabbing shadow hover:shadow-md relative group"
-                      >
-                        {/* Avatar / Initials */}
-                        <div className="flex items-center gap-3 mb-3">
-                          {app.candidate.candidateProfile?.profileImage ? (
-                            <img
-                              src={app.candidate.candidateProfile.profileImage}
-                              alt="Avatar"
-                              className="w-7 h-7 rounded-full object-cover border border-slate-700"
-                            />
-                          ) : (
-                            <div className="w-7 h-7 rounded-full bg-blue-600 flex items-center justify-center text-[10px] font-bold">
-                              {app.candidate.fullName.charAt(0)}
-                            </div>
-                          )}
-                          <div>
-                            <h4 className="font-bold text-xs text-slate-200 truncate max-w-[120px]">
-                              {app.candidate.fullName}
-                            </h4>
-                            <span className="text-[9px] text-slate-500">
-                              {new Date(app.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* ATS Score Indicator */}
-                        <div className="flex justify-between items-center text-[10px] text-slate-400">
-                          <span>Match Score</span>
-                          <strong className="text-blue-400">{app.matchScore || 0}%</strong>
-                        </div>
-                      </div>
+                      <KanbanCard key={app.id} app={app} />
                     ))
                   )}
                 </div>

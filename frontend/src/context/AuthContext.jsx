@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useState } from "react";
 
 export const AuthContext =
@@ -39,6 +40,12 @@ const AuthProvider = ({ children }) => {
     setToken(null);
   };
 
+  const updateUser = (updatedData) => {
+    const updatedUser = { ...user, ...updatedData };
+    localStorage.setItem("user", JSON.stringify(updatedUser));
+    setUser(updatedUser);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -46,6 +53,7 @@ const AuthProvider = ({ children }) => {
         token,
         login,
         logout,
+        updateUser,
       }}
     >
       {children}

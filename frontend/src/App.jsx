@@ -27,6 +27,9 @@ import SavedJobs from "./pages/SavedJobs";
 import SubscriptionPricing from "./pages/SubscriptionPricing";
 import ErrorBoundary from "./components/ErrorBoundary";
 import ScrollToTop from "./components/ScrollToTop";
+import CommandPalette from "./components/CommandPalette";
+import ResumeBuilder from "./pages/ResumeBuilder";
+import PaymentHistory from "./pages/PaymentHistory";
 
 function App() {
 
@@ -37,6 +40,8 @@ function App() {
       <ScrollToTop />
 
       <Navbar />
+
+      <CommandPalette />
 
       <ErrorBoundary>
         <Routes>
@@ -149,6 +154,15 @@ function App() {
         />
 
         <Route
+          path="/candidate/resume-builder"
+          element={
+            <ProtectedRoute role="CANDIDATE">
+              <ResumeBuilder />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/admin-dashboard"
           element={
             <ProtectedRoute role="ADMIN">
@@ -160,6 +174,15 @@ function App() {
         <Route
           path="/pricing"
           element={<SubscriptionPricing />}
+        />
+
+        <Route
+          path="/payment/history"
+          element={
+            <ProtectedRoute>
+              <PaymentHistory />
+            </ProtectedRoute>
+          }
         />
       </Routes>
       </ErrorBoundary>
