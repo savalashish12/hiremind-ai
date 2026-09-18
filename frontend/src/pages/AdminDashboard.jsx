@@ -232,7 +232,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto min-h-screen space-y-8 text-slate-100">
+    <div className="w-full p-4 sm:p-6 xl:p-8 min-h-screen space-y-8 text-slate-100">
       
       {/* Title */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center border-b border-slate-900/60 pb-6 gap-4">

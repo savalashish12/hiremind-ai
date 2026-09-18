@@ -298,7 +298,7 @@ const CandidateDashboard = () => {
     try {
       const [resTips, resRoad] = await Promise.all([
         API.get("/ai/resume-suggestions"),
-        API.get(`/ai/career-roadmap?targetRole=${targetRole}`),
+        API.get(`/ai/career-roadmap?targetRole=${encodeURIComponent(targetRole)}`),
       ]);
       setAiSuggestions(resTips.data);
       setAiRoadmap(resRoad.data);
@@ -422,7 +422,7 @@ const CandidateDashboard = () => {
 
   if (pageLoading) {
     return (
-      <div className="p-6 md:p-10 max-w-7xl mx-auto min-h-screen space-y-8">
+      <div className="w-full p-4 sm:p-6 xl:p-8 min-h-screen space-y-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
           {Array(4).fill(0).map((_, i) => <StatCardSkeleton key={i} />)}
         </div>
@@ -432,7 +432,7 @@ const CandidateDashboard = () => {
   }
 
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto min-h-screen space-y-8 text-slate-100">
+    <div className="w-full p-4 sm:p-6 xl:p-8 min-h-screen space-y-8 text-slate-100">
       
       {/* 1. TOP HEADER WITH STATS OVERVIEW */}
       <div className="flex flex-col lg:flex-row gap-8 items-start">

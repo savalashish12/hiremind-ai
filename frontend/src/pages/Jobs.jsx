@@ -41,7 +41,7 @@ const getDaysAgo = (dateStr) => {
 };
 
 const JobCard = React.memo(({ job, isApplied, isSaved, onApply, onToggleSave, onOpen, isExternal }) => {
-  const initials = (job.company || job.postedBy?.recruiterProfile?.companyName || 'HM').slice(0,2).toUpperCase();
+  const initials = (job.company || job.recruiter?.recruiterProfile?.companyName || job.recruiter?.companyProfile?.companyName || job.postedBy?.recruiterProfile?.companyName || 'HM').slice(0,2).toUpperCase();
   const avatarColor = getAvatarColor(initials);
   const scoreBadge = getScoreBadge(job.matchScore);
   const typeColors = { FULL_TIME: 'bg-blue-900/50 text-blue-300', PART_TIME: 'bg-purple-900/50 text-purple-300', INTERNSHIP: 'bg-teal-900/50 text-teal-300', CONTRACT: 'bg-amber-900/50 text-amber-300' };
@@ -65,7 +65,7 @@ const JobCard = React.memo(({ job, isApplied, isSaved, onApply, onToggleSave, on
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-white text-[15px] leading-tight truncate group-hover:text-blue-400 transition-colors">{job.title}</h3>
-          <p className="text-slate-400 text-xs mt-0.5 truncate">{job.company || job.postedBy?.recruiterProfile?.companyName || 'Company'}</p>
+          <p className="text-slate-400 text-xs mt-0.5 truncate">{job.company || job.recruiter?.recruiterProfile?.companyName || job.recruiter?.companyProfile?.companyName || job.postedBy?.recruiterProfile?.companyName || 'Company'}</p>
         </div>
         {!isExternal && (
           <button onClick={e => { e.stopPropagation(); onToggleSave(job.id); }}
@@ -372,7 +372,7 @@ const Jobs = () => {
   };
 
   return (
-    <div className="p-4 md:p-10 max-w-7xl mx-auto text-white">
+    <div className="w-full p-4 sm:p-6 xl:p-8 text-white">
       
       {/* Upper header summary */}
       <div className="mb-10 text-left">
@@ -384,7 +384,7 @@ const Jobs = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-[260px_minmax(0,1fr)] gap-6 xl:gap-8">
         
         {/* Mobile Filter Toggle Drawer button */}
         <button
@@ -516,7 +516,7 @@ const Jobs = () => {
         )}
 
         {/* Right side list column */}
-        <div className="lg:col-span-3 space-y-6 w-full">
+        <div className="space-y-6 w-full min-w-0">
           
           {/* Search Input */}
           <div className="relative w-full shadow-md rounded-xl">
@@ -533,7 +533,7 @@ const Jobs = () => {
             />
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
              {loading ? Array(6).fill(0).map((_,i) => <JobCardSkeleton key={i} />) :
               displayedJobs.length === 0 ? (
                 <div className="col-span-full">
@@ -587,7 +587,7 @@ const Jobs = () => {
                 <div>
                   <h3 className="text-xl md:text-2xl font-extrabold text-white">{selectedJob.title}</h3>
                   <p className="text-xs text-blue-400 mt-1 font-semibold">
-                    🏢 {selectedJob.isExternal ? selectedJob.company : (selectedJob.recruiter?.fullName || "Company")} | 📍 {selectedJob.location} | 💰 {selectedJob.salary || "Not Specified"}
+                    🏢 {selectedJob.isExternal ? selectedJob.company : (selectedJob.recruiter?.recruiterProfile?.companyName || selectedJob.recruiter?.companyProfile?.companyName || selectedJob.recruiter?.fullName || "Company")} | 📍 {selectedJob.location} | 💰 {selectedJob.salary || "Not Specified"}
                   </p>
                 </div>
                 <button
@@ -769,7 +769,7 @@ const Jobs = () => {
           <div className="bg-slate-800 border border-slate-700 rounded-3xl p-6 w-full max-w-md shadow-2xl"
             onClick={e => e.stopPropagation()}>
             <h2 className="text-lg font-bold text-white mb-0.5">Apply to {matchPreview.job.title}</h2>
-            <p className="text-slate-400 text-sm mb-5">{matchPreview.job.company || matchPreview.job.postedBy?.recruiterProfile?.companyName || 'Company'}</p>
+            <p className="text-slate-400 text-sm mb-5">{matchPreview.job.company || matchPreview.job.recruiter?.recruiterProfile?.companyName || matchPreview.job.recruiter?.companyProfile?.companyName || matchPreview.job.postedBy?.recruiterProfile?.companyName || 'Company'}</p>
 
             {matchLoading ? (
               <div className="flex items-center gap-3 text-slate-400 text-sm py-6">

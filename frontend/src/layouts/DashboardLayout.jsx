@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 
 const linkCls = ({ isActive }) =>
-  `flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+  `flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap shrink-0 lg:shrink ${
     isActive ? "bg-blue-600 text-white shadow-md" : "text-slate-400 hover:text-white hover:bg-slate-800"
   }`;
 
@@ -58,26 +58,33 @@ export default function DashboardLayout({ role }) {
   const title = role === "CANDIDATE" ? "Candidate Workspace" : role === "RECRUITER" ? "Recruiter Workspace" : "Admin Console";
 
   return (
-    <div className="max-w-7xl mx-auto px-4 md:px-6 py-6 grid grid-cols-1 lg:grid-cols-[230px_1fr] gap-6 min-h-screen text-slate-100">
-      <aside className="lg:sticky lg:top-20 h-fit bg-slate-900/60 border border-slate-800 rounded-2xl p-3 space-y-1">
-        <p className="px-3 pt-2 pb-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">{title}</p>
-        {links.map((l) => (
-          <NavLink key={l.to} to={l.to} className={linkCls}>
-            {l.icon}{l.label}
+    <div className="w-full px-3 sm:px-4 md:px-6 xl:px-8 py-4 md:py-6 grid grid-cols-1 lg:grid-cols-[248px_minmax(0,1fr)] gap-4 md:gap-6 min-h-screen text-slate-100">
+      {/* Sidebar: horizontal scroll nav on mobile, sticky rail on desktop */}
+      <aside className="lg:sticky lg:top-20 h-fit bg-slate-900/60 border border-slate-800 rounded-2xl p-2.5 md:p-3 lg:space-y-1 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto">
+        <p className="hidden lg:block px-3 pt-2 pb-3 text-[10px] font-extrabold uppercase tracking-wider text-slate-500">{title}</p>
+        <nav className="flex lg:flex-col flex-row overflow-x-auto lg:overflow-visible gap-1 pb-1 lg:pb-0">
+          {links.map((l) => (
+            <NavLink key={l.to} to={l.to} className={linkCls}>
+              {l.icon}<span className="hidden sm:inline lg:inline">{l.label}</span>
+            </NavLink>
+          ))}
+          <NavLink to="/jobs" className={`${linkCls({ isActive: false })} lg:hidden`}>
+            <Map size={14} /><span className="hidden sm:inline">Public Jobs</span>
           </NavLink>
-        ))}
-        <div className="pt-2 mt-2 border-t border-slate-800">
+        </nav>
+        <div className="hidden lg:block pt-2 mt-2 border-t border-slate-800 space-y-1">
           <NavLink to="/jobs" className={linkCls}><Map size={14} />Public Job Board</NavLink>
           <button
             onClick={() => { logout(); navigate("/login"); }}
-            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-all"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-all whitespace-nowrap"
           >
             <LogOut size={14} />Logout
           </button>
         </div>
-        {user && <p className="px-3 py-2 text-[10px] text-slate-600 truncate">{user.email} · {location.pathname}</p>}
+        {user && <p className="hidden lg:block px-3 py-2 text-[10px] text-slate-600 truncate">{user.email} · {location.pathname}</p>}
       </aside>
-      <main className="min-w-0">
+      {/* Fluid content column — fills all remaining width */}
+      <main className="min-w-0 w-full overflow-x-hidden">
         <Outlet />
       </main>
     </div>

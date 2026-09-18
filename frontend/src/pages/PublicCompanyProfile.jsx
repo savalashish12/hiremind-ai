@@ -40,18 +40,20 @@ const PublicCompanyProfile = () => {
 
   if (error || !profile) {
     return (
-      <div className="max-w-2xl mx-auto py-20 text-center text-white">
-        <p className="text-red-400 font-bold">⚠️ {error || "Profile Not Found"}</p>
-        <a href="/" className="mt-4 bg-slate-800 text-xs px-4 py-2 rounded-lg inline-block font-semibold">
-          Return Home
-        </a>
+      <div className="max-w-2xl mx-auto p-6 md:p-10 text-center">
+        <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-10 space-y-3">
+          <p className="text-red-400 font-bold">⚠️ {error || "Profile Not Found"}</p>
+          <a href="/" className="mt-4 bg-slate-800 hover:bg-slate-700 text-xs px-4 py-2 rounded-xl inline-block font-semibold transition-colors">
+            Return Home
+          </a>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-10 max-w-4xl mx-auto text-white">
-      <div className="bg-slate-800 p-8 rounded-3xl border border-slate-700 shadow-xl space-y-6">
+    <div className="w-full max-w-6xl mx-auto p-4 sm:p-6 xl:p-8 text-white">
+      <div className="bg-slate-800 p-6 md:p-8 rounded-3xl border border-slate-700 shadow-xl space-y-6">
         <div className="flex items-center gap-6 pb-6 border-b border-slate-700">
           {profile.logo ? (
             <img src={profile.logo} alt="Company Logo" className="w-20 h-20 object-cover rounded-2xl border border-slate-700 shadow-md" />

@@ -186,7 +186,7 @@ const RecruiterDashboard = () => {
 
   if (dashboardLoading) {
     return (
-      <div className="p-6 md:p-10 max-w-7xl mx-auto min-h-screen space-y-8">
+      <div className="w-full p-4 sm:p-6 xl:p-8 min-h-screen space-y-8">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
           {Array(4).fill(0).map((_, i) => <StatCardSkeleton key={i} />)}
         </div>
@@ -196,7 +196,7 @@ const RecruiterDashboard = () => {
   }
 
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto text-slate-100 print:p-0 print:bg-white print:text-black min-h-screen space-y-8">
+    <div className="w-full p-4 sm:p-6 xl:p-8 text-slate-100 print:p-0 print:bg-white print:text-black min-h-screen space-y-8">
       
       {/* 1. HEADER ROW */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-900/60 pb-6 print:mb-6 print:pb-3">

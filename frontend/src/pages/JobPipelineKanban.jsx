@@ -140,7 +140,7 @@ const JobPipelineKanban = () => {
   };
 
   return (
-    <div className="p-10 max-w-[95vw] mx-auto text-white">
+    <div className="p-6 md:p-10 max-w-[95vw] mx-auto text-white">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-10 border-b border-slate-700 pb-6">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">

@@ -75,11 +75,13 @@ const PublicPortfolio = () => {
 
   if (error || !portfolio) {
     return (
-      <div className="max-w-2xl mx-auto py-20 text-center text-white">
-        <p className="text-red-400 font-bold">⚠️ {error || "Portfolio Not Found"}</p>
-        <a href="/" className="mt-4 bg-slate-800 text-xs px-4 py-2 rounded-lg inline-block font-semibold">
-          Return Home
-        </a>
+      <div className="max-w-2xl mx-auto p-6 md:p-10 text-center">
+        <div className="bg-slate-900/60 border border-slate-800 rounded-3xl p-10 space-y-3">
+          <p className="text-red-400 font-bold">⚠️ {error || "Portfolio Not Found"}</p>
+          <a href="/" className="mt-4 bg-slate-800 hover:bg-slate-700 text-xs px-4 py-2 rounded-xl inline-block font-semibold transition-colors">
+            Return Home
+          </a>
+        </div>
       </div>
     );
   }
@@ -88,7 +90,7 @@ const PublicPortfolio = () => {
   const user = portfolio.candidate || {};
 
   return (
-    <div className="p-10 max-w-5xl mx-auto text-white space-y-10">
+    <div className="w-full max-w-7xl mx-auto p-4 sm:p-6 xl:p-8 text-white space-y-8 md:space-y-10">
       {/* Header Profile card */}
       <div className="bg-slate-850 p-8 rounded-3xl border border-slate-700/80 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex flex-col md:flex-row items-center gap-6">

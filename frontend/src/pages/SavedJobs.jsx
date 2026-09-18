@@ -54,7 +54,7 @@ const SavedJobs = () => {
   };
 
   return (
-    <div className="p-10 max-w-5xl mx-auto text-white">
+    <div className="w-full p-4 sm:p-6 xl:p-8 text-white">
       <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent mb-2">
         My Bookmarked Jobs
       </h1>

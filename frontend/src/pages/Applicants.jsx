@@ -505,7 +505,7 @@ const Applicants = () => {
   };
 
   return (
-    <div className="p-6 md:p-10 max-w-7xl mx-auto space-y-8 text-slate-100 min-h-screen">
+    <div className="w-full p-4 sm:p-6 xl:p-8 space-y-8 text-slate-100 min-h-screen">
       
       {/* Title Header */}
       <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6 border-b border-slate-900 pb-6">

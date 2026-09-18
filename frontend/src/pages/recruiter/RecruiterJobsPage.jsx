@@ -37,7 +37,7 @@ const RecruiterJobsPage = () => {
               <div className="flex justify-between gap-2"><h3 className="font-bold text-white text-sm">{job.title}</h3><span className="text-[10px] px-2 py-0.5 rounded border border-slate-700 text-slate-400 h-fit">{job.status}</span></div>
               <p className="text-slate-400 line-clamp-2">{job.description}</p>
               <p className="text-slate-500">📍 {job.location} · 💰 {job.salary} · {job.jobType?.replace("_", " ")}</p>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button onClick={() => navigate(`/recruiter/jobs/${job.id}`)} className="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold py-2 rounded-xl">Detail + Edit</button>
                 <button onClick={() => navigate(`/recruiter/applicants/${job.id}`)} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-xl">Applicants</button>
                 <button onClick={() => navigate(`/recruiter/pipeline/${job.id}`)} className="flex-1 bg-purple-600 hover:bg-purple-500 text-white font-bold py-2 rounded-xl">Pipeline</button>

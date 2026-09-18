@@ -67,7 +67,7 @@ const PaymentHistory = () => {
   });
 
   return (
-    <div className="p-6 md:p-10 max-w-6xl mx-auto min-h-screen text-slate-100 space-y-8">
+    <div className="w-full p-4 sm:p-6 xl:p-8 min-h-screen text-slate-100 space-y-8">
       {/* Title Header */}
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">

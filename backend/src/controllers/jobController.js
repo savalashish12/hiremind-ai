@@ -68,9 +68,16 @@ const getAllJobs = async (req, res) => {
     const limit = parseInt(req.query.limit) || 20;
     const skip = (page - 1) * limit;
 
-    const { search, location, jobType, skills } = req.query;
+    const { search, location, jobType, skills, status } = req.query;
 
     const where = {};
+
+    // Public board defaults to OPEN roles only; explicit ?status=ALL overrides.
+    if (status && status !== 'ALL') {
+      where.status = status;
+    } else if (!status) {
+      where.status = 'OPEN';
+    }
 
     if (search) {
       where.title = { contains: search, mode: 'insensitive' };

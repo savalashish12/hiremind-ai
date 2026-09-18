@@ -272,8 +272,20 @@ const getMyApplications = async (req, res) => {
             req.user.id,
         },
         include: {
-          job: true,
+          job: {
+            include: {
+              recruiter: {
+                select: {
+                  id: true,
+                  fullName: true,
+                  recruiterProfile: true,
+                  companyProfile: true,
+                },
+              },
+            },
+          },
         },
+        orderBy: { createdAt: "desc" },
       });
 
     res.status(200).json(
