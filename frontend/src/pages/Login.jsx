@@ -20,6 +20,32 @@ const Login = () => {
   const [isLight, setIsLight] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
   const [resending, setResending] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  // Google OAuth redirect callback: /login?google_auth={token,user} or ?google_error=...
+  useEffect(() => {
+    const payload = searchParams.get("google_auth");
+    const googleError = searchParams.get("google_error");
+    if (googleError) {
+      toast.error(decodeURIComponent(googleError));
+      navigate("/login", { replace: true });
+      return;
+    }
+    if (payload) {
+      try {
+        const { token, user } = JSON.parse(payload);
+        login(user, token);
+        toast.success(`Welcome${user?.fullName ? `, ${user.fullName.split(" ")[0]}` : ""}! Signed in with Google.`);
+        if (user?.role === "RECRUITER") navigate("/recruiter/dashboard", { replace: true });
+        else if (user?.role === "ADMIN") navigate("/admin/dashboard", { replace: true });
+        else navigate("/candidate/dashboard", { replace: true });
+      } catch {
+        toast.error("Google sign-in failed. Please try again.");
+        navigate("/login", { replace: true });
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const handleThemeChange = () => {
@@ -277,6 +303,35 @@ const Login = () => {
               <span className={`text-xs ${isLight ? 'text-[#64748B]' : 'text-[#9CA3AF]'}`}>or</span>
               <div className={`flex-1 h-px ${isLight ? 'bg-[#E2E8F0]' : 'bg-[#334155]'}`} />
             </div>
+
+            {/* Sign in with Google (OAuth redirect flow — no popup) */}
+            <button
+              type="button"
+              disabled={isLoading || googleLoading}
+              onClick={async () => {
+                setGoogleLoading(true);
+                try {
+                  const res = await API.get("/auth/google/url");
+                  window.location.href = res.data.url;
+                } catch (err) {
+                  toast.error(err.response?.data?.message || "Google sign-in is not configured yet");
+                  setGoogleLoading(false);
+                }
+              }}
+              className={`w-full py-3.5 font-semibold rounded-xl text-sm transition-all duration-150 active:scale-[0.98] flex items-center justify-center gap-2.5 border ${
+                isLight
+                  ? 'bg-white border-[#CBD5E1] text-[#0F172A] hover:bg-[#F8FAFC]'
+                  : 'bg-white/[0.03] border-[#334155] text-[#F9FAFB] hover:bg-white/[0.07]'
+              } disabled:opacity-60 disabled:cursor-not-allowed`}
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.3H12v4.5h6.5c-.1 1.1-.8 2.7-2.4 3.8l-.1.1 3.5 2.7.2.1c2.2-2 3.8-5 3.8-8.9z" />
+                <path fill="#34A853" d="M12 24c3.2 0 6-1.1 7.9-2.9l-3.8-2.9c-1 .7-2.4 1.2-4.1 1.2-3.2 0-5.9-2.1-6.8-5l-.1.1-3.6 2.8v.1C3.5 21.3 7.4 24 12 24z" />
+                <path fill="#FBBC05" d="M5.2 14.4c-.2-.7-.4-1.5-.4-2.4s.1-1.7.4-2.4l-.1-.1-3.5-2.7-.1.1C.5 8.7 0 10.3 0 12s.5 3.3 1.5 4.7l3.7-2.3z" />
+                <path fill="#EA4335" d="M12 4.7c1.8 0 3 .8 3.7 1.4l3.3-3.2C17.9 1.1 15.2 0 12 0 7.4 0 3.5 2.7 1.5 6.9l3.7 2.8c1-2.9 3.6-5 6.8-5z" />
+              </svg>
+              {googleLoading ? "Redirecting to Google..." : "Continue with Google"}
+            </button>
 
             {/* Register link */}
             <p className={`text-center text-sm ${isLight ? 'text-[#334155]' : 'text-[#D1D5DB]'}`}>

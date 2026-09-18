@@ -3,15 +3,21 @@ const prisma = require('../config/prisma');
 
 const protect = async (req, res, next) => {
   try {
-    const token = req.headers.authorization;
+    const header = req.headers.authorization;
 
-    if (!token) {
+    if (!header || !header.startsWith('Bearer ')) {
       return res.status(401).json({
         message: 'No token provided',
       });
     }
 
-    const actualToken = token.split(' ')[1];
+    const actualToken = header.split(' ')[1];
+
+    if (!actualToken) {
+      return res.status(401).json({
+        message: 'No token provided',
+      });
+    }
 
     const decoded = jwt.verify(
       actualToken,
@@ -38,6 +44,11 @@ const protect = async (req, res, next) => {
 
     next();
   } catch (error) {
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        message: 'Session expired. Please login again.',
+      });
+    }
     res.status(401).json({
       message: 'Invalid token',
     });

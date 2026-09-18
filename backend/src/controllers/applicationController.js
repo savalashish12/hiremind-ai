@@ -18,6 +18,7 @@ const cloudinary =
 const {
   sendStatusEmail,
   sendInterviewEmail,
+  sendOfferEmail,
 } = require(
   "../services/emailService"
 );
@@ -572,6 +573,18 @@ const generateOfferLetter = async (req, res) => {
       "Job Offer Received",
       `Congratulations! You have received a job offer from "${companyName}" for the role of "${role}".`
     );
+
+    // Best-effort offer email (must not fail offer generation if SMTP is down)
+    try {
+      await sendOfferEmail(
+        application.candidate.email,
+        application.candidate.fullName,
+        role,
+        uploadedFile.secure_url
+      );
+    } catch (e) {
+      console.error("Offer email failed:", e.message);
+    }
 
     // Create activity log
     await prisma.activityLog.create({
