@@ -4,8 +4,8 @@ const PDFDocument = require('pdfkit');
 const { pushToUser } = require('../utils/sseManager');
 const manualPayee = require('../config/manualPayment');
 
-// 1. Create Fake Order ID
-exports.createFakeOrder = async (req, res) => {
+// 1. Create UPI Order ID
+exports.createUpiOrder = async (req, res) => {
   try {
     const { planName, billingCycle } = req.body;
 
@@ -24,7 +24,7 @@ exports.createFakeOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid plan selected' });
     }
 
-    const orderId = `order_fake_${crypto.randomBytes(8).toString('hex')}`;
+    const orderId = `order_upi_${crypto.randomBytes(8).toString('hex')}`;
 
     return res.status(200).json({
       success: true,
@@ -35,13 +35,13 @@ exports.createFakeOrder = async (req, res) => {
       billingCycle,
     });
   } catch (error) {
-    console.error('Error creating fake order:', error);
+    console.error('Error creating UPI order:', error);
     return res.status(500).json({ success: false, message: 'Failed to create payment order' });
   }
 };
 
-// 2. Process Fake Payment with 10% failure simulation
-exports.processFakePayment = async (req, res) => {
+// 2. Process UPI Payment with 10% failure simulation
+exports.processUpiPayment = async (req, res) => {
   try {
     const { orderId, planName, billingCycle, amount, paymentMethod } = req.body;
     const userId = req.user.id;
@@ -153,7 +153,7 @@ exports.processFakePayment = async (req, res) => {
       date: new Date(),
     });
   } catch (error) {
-    console.error('Error processing fake payment:', error);
+    console.error('Error processing UPI payment:', error);
     return res.status(500).json({ success: false, message: 'Internal server error processing transaction' });
   }
 };
@@ -303,7 +303,7 @@ exports.downloadInvoice = async (req, res) => {
     doc.text(`Role: ${payment.user.role}`, 50, 176);
 
     doc.fillColor(primaryColor).fontSize(11).font('Helvetica-Bold').text('Payment Method Details:', 350, 135);
-    doc.fillColor(darkColor).fontSize(10).font('Helvetica').text(`Gateway: Fake Payment Portal`, 350, 150);
+    doc.fillColor(darkColor).fontSize(10).font('Helvetica').text(`Gateway: UPI Manual Payment`, 350, 150);
     doc.text(`Method: ${payment.paymentMethod}`, 350, 163);
     doc.font('Helvetica-Bold').text(`Txn ID: ${payment.transactionId}`, 350, 176);
 

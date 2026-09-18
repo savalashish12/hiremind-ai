@@ -294,7 +294,7 @@ const ManualUpiPaymentModal = ({ isOpen, onClose, planName, billingCycle, amount
                     <ShieldCheck size={14} /> I Have Paid — Submit UTR (₹{amount})
                   </button>
                   <p className="text-[10px] text-slate-500 text-center flex items-center justify-center gap-1">
-                    <CheckCircle size={11} /> Admin verifies every UTR before activation — fake entries are rejected.
+                    <CheckCircle size={11} /> Admin verifies every UTR before activation — invalid entries are rejected.
                   </p>
                 </form>
               </>

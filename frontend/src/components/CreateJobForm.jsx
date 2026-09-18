@@ -71,6 +71,9 @@ const CreateJobForm = ({
     }
   };
 
+  const inputCls =
+    "w-full bg-slate-950 border border-slate-700/80 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40 transition-colors";
+
   return (
 
     <form
@@ -101,108 +104,117 @@ const CreateJobForm = ({
         "
       >
 
-        <input
-          type="text"
-          name="title"
-          placeholder="Job Title"
-          value={formData.title}
-          onChange={handleChange}
-          className="
-          p-4
-          rounded
-          bg-slate-700
-          "
-        />
+        <div>
+          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Job Title *</label>
+          <input
+            type="text"
+            name="title"
+            placeholder="e.g. Frontend Developer"
+            value={formData.title}
+            onChange={handleChange}
+            required
+            className={inputCls}
+          />
+        </div>
 
-        <input
-          type="text"
-          name="location"
-          placeholder="Location"
-          value={formData.location}
-          onChange={handleChange}
-          className="
-          p-4
-          rounded
-          bg-slate-700
-          "
-        />
+        <div>
+          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Location *</label>
+          <input
+            type="text"
+            name="location"
+            placeholder="e.g. Bangalore / Remote"
+            value={formData.location}
+            onChange={handleChange}
+            required
+            className={inputCls}
+          />
+        </div>
 
-        <input
-          type="text"
-          name="salary"
-          placeholder="Salary"
-          value={formData.salary}
-          onChange={handleChange}
-          className="
-          p-4
-          rounded
-          bg-slate-700
-          "
-        />
+        <div>
+          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Salary *</label>
+          <input
+            type="text"
+            name="salary"
+            placeholder="e.g. ₹8-12 LPA"
+            value={formData.salary}
+            onChange={handleChange}
+            required
+            className={inputCls}
+          />
+        </div>
 
-        <select
-          name="jobType"
-          value={formData.jobType}
-          onChange={handleChange}
-          className="
-          p-4
-          rounded
-          bg-slate-700
-          "
-        >
+        <div>
+          <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Employment Type *</label>
+          <select
+            name="jobType"
+            value={formData.jobType}
+            onChange={handleChange}
+            required
+            className={`${inputCls} cursor-pointer`}
+          >
 
-          <option value="FULL_TIME">
-            Full Time
-          </option>
+            <option value="FULL_TIME">
+              Full Time
+            </option>
 
-          <option value="PART_TIME">
-            Part Time
-          </option>
+            <option value="PART_TIME">
+              Part Time
+            </option>
 
-          <option value="INTERNSHIP">
-            Internship
-          </option>
+            <option value="INTERNSHIP">
+              Internship
+            </option>
 
-        </select>
+            <option value="CONTRACT">
+              Contract
+            </option>
+
+          </select>
+
+        </div>
 
       </div>
 
-      <textarea
-        name="description"
-        placeholder="Description"
-        value={formData.description}
-        onChange={handleChange}
-        className="
-        w-full
-        p-4
-        rounded
-        bg-slate-700
-        mt-4
-        "
-      />
+      <div className="mt-4">
+        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Job Description *</label>
+        <textarea
+          name="description"
+          placeholder="Roles, responsibilities, requirements..."
+          value={formData.description}
+          onChange={handleChange}
+          required
+          rows="4"
+          className={`${inputCls} leading-relaxed resize-y`}
+        />
+      </div>
 
-      <input
-        type="text"
-        name="skillsRequired"
-        placeholder="React, Node.js, PostgreSQL"
-        value={formData.skillsRequired}
-        onChange={handleChange}
-        className="
-        w-full
-        p-4
-        rounded
-        bg-slate-700
-        mt-4
-        "
-      />
+      <div className="mt-4">
+        <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Skills Required (comma-separated)</label>
+        <input
+          type="text"
+          name="skillsRequired"
+          placeholder="React, Node.js, PostgreSQL"
+          value={formData.skillsRequired}
+          onChange={handleChange}
+          className={inputCls}
+        />
+      </div>
 
       <button
         className="
         bg-blue-600
+        hover:bg-blue-500
+        focus:outline-none
+        focus:ring-2
+        focus:ring-blue-500/40
+        text-white
+        font-bold
         px-8
-        py-4
-        rounded
-        mt-4
+        py-3.5
+        rounded-xl
+        mt-6
+        text-sm
+        transition-colors
         "
       >
         Create Job

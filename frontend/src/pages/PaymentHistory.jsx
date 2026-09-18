@@ -17,12 +17,12 @@ const PaymentHistory = () => {
   const fetchPayments = async () => {
     setLoading(true);
     try {
-      // Manual-UPI history includes legacy fake rows + new PENDING/SUCCESS rows
+      // Manual-UPI history includes legacy rows + new PENDING/SUCCESS rows
       const res = await api.get("/payment/manual/history").catch(() => null);
       if (res?.data?.payments) {
         setPayments(res.data.payments);
       } else {
-        const legacy = await api.get("/payment/fake/history");
+        const legacy = await api.get("/payment/history");
         setPayments(legacy.data.payments);
       }
     } catch {
@@ -40,7 +40,7 @@ const PaymentHistory = () => {
     playHoverSound();
     setDownloadingId(paymentId);
     try {
-      const response = await api.get(`/payment/fake/invoice/${paymentId}`, {
+      const response = await api.get(`/payment/invoice/${paymentId}`, {
         responseType: "blob",
       });
       const file = new Blob([response.data], { type: "application/pdf" });

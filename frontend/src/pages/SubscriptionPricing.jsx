@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import api from "../services/api";
 import { playHoverSound } from "../utils/SoundEffects";
-import FakePaymentModal from "../components/FakePaymentModal";
+import UpiPaymentModal from "../components/UpiPaymentModal";
 
 const SubscriptionPricing = () => {
   const { user, token } = useContext(AuthContext);
@@ -264,7 +264,7 @@ const SubscriptionPricing = () => {
       </div>
 
       {/* Interactive Modal overlay */}
-      <FakePaymentModal
+      <UpiPaymentModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         planName={checkoutData.planName}

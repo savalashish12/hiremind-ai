@@ -145,8 +145,8 @@ async function runUnitTests() {
     }
   });
 
-  // Test 8: Fake Payment Gateway Pricing logic check
-  test("Fake payment order amount validation", () => {
+  // Test 8: UPI Payment Pricing logic check
+  test("UPI payment order amount validation", () => {
     const calculateAmount = (planName, billingCycle) => {
       let amount = 0;
       if (planName.toUpperCase() === 'PRO') {

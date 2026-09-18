@@ -16,7 +16,7 @@ const adminRoutes = require('./routes/adminRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const atsRoutes = require('./routes/atsRoutes');
 const skillsRoutes = require('./routes/skillsRoutes');
-const paymentRoutes = require('./routes/fakePaymentRoutes');
+const paymentRoutes = require('./routes/upiPaymentRoutes');
 const manualPaymentRoutes = require('./routes/manualPaymentRoutes');
 
 const app = express();

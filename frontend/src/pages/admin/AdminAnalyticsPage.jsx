@@ -9,7 +9,7 @@ const AdminAnalyticsPage = () => {
   useEffect(() => {
     (async () => {
       try {
-        const [r1, r2] = await Promise.allSettled([API.get("/admin/analytics"), API.get("/payment/fake/admin/stats")]);
+        const [r1, r2] = await Promise.allSettled([API.get("/admin/analytics"), API.get("/payment/admin/stats")]);
         if (r1.status === "fulfilled") setStats(r1.value.data);
         if (r2.status === "fulfilled") setPay(r2.value.data.stats);
       } catch { toast.error("Failed"); }

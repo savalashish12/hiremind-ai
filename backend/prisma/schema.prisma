@@ -286,7 +286,7 @@ model Payment {
   status        String   // "SUCCESS", "FAILED", "PENDING", "REJECTED"
   createdAt     DateTime @default(now())
 
-  // Manual UPI fields (nullable for legacy fake/razorpay rows)
+  // Manual UPI fields (nullable for legacy UPI/razorpay rows)
   planName      String?
   billingCycle  String?
   orderId       String?

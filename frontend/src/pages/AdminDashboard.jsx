@@ -108,7 +108,7 @@ const AdminDashboard = () => {
 
   const fetchPaymentStats = async () => {
     try {
-      const res = await API.get("/payment/fake/admin/stats");
+      const res = await API.get("/payment/admin/stats");
       setPaymentStats(res.data.stats);
     } catch {
       toast.error("Failed to fetch payment stats");
@@ -185,7 +185,7 @@ const AdminDashboard = () => {
 
   const downloadInvoiceFile = async (paymentId, transactionId) => {
     try {
-      const response = await API.get(`/payment/fake/invoice/${paymentId}`, {
+      const response = await API.get(`/payment/invoice/${paymentId}`, {
         responseType: "blob"
       });
       const file = new Blob([response.data], { type: "application/pdf" });

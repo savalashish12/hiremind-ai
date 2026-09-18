@@ -5,22 +5,22 @@ const protect = require('../middleware/authMiddleware');
 const authorizeRoles = require('../middleware/roleMiddleware');
 
 const {
-  createFakeOrder,
-  processFakePayment,
+  createUpiOrder,
+  processUpiPayment,
   getPaymentHistory,
   getAdminPaymentStats,
   downloadInvoice,
-} = require('../controllers/fakePaymentController');
+} = require('../controllers/upiPaymentController');
 
 // All payment route interactions are protected by authorization check
 router.use(protect);
 
-router.post('/fake/create', createFakeOrder);
-router.post('/fake/process', processFakePayment);
-router.get('/fake/history', getPaymentHistory);
-router.get('/fake/invoice/:paymentId', downloadInvoice);
+router.post('/create', createUpiOrder);
+router.post('/process', processUpiPayment);
+router.get('/history', getPaymentHistory);
+router.get('/invoice/:paymentId', downloadInvoice);
 
 // Admin exclusive reporting API
-router.get('/fake/admin/stats', authorizeRoles('ADMIN'), getAdminPaymentStats);
+router.get('/admin/stats', authorizeRoles('ADMIN'), getAdminPaymentStats);
 
 module.exports = router;
