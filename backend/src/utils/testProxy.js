@@ -3,7 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 async function test() {
-  const url1 = "https://res.cloudinary.com/dtewde9uz/image/upload/v1780469690/hiremind-resumes/1780469688920_xvsxi4.pdf";
+  // Placeholder URL (standalone dev utility — replace with a real file URL to test).
+  const url1 = "https://res.cloudinary.com/demo/image/upload/v1700000000/hiremind-resumes/sample_test.pdf";
   const url2 = url1.replace("/image/upload/", "/raw/upload/");
   
   console.log("Original URL:", url1);

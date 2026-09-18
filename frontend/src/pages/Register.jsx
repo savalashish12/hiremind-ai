@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Brain, Briefcase, GraduationCap, ChevronRight, Check } from 'lucide-react';
+import { Eye, EyeOff, Briefcase, GraduationCap, ChevronRight, Check } from 'lucide-react';
 import API from "../services/api";
 
 const strengthConfig = [
@@ -24,6 +24,7 @@ const Register = () => {
 
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [isLight, setIsLight] = useState(false);
 
@@ -91,16 +92,6 @@ const Register = () => {
           }} />
 
         <div className="relative z-10">
-          {/* Logo */}
-          <div className="flex items-center gap-3 mb-16">
-            <div className={`w-10 h-10 bg-[#7C3AED] rounded-2xl flex items-center justify-center shadow-lg ${isLight ? 'shadow-indigo-600/20' : 'shadow-indigo-900/50'}`}>
-              <Brain size={22} className="text-white" />
-            </div>
-            <span className={`text-2xl font-bold ${isLight ? 'text-[#0F172A]' : 'text-[#F9FAFB]'} tracking-tight`}>
-              HireMind <span className="text-[#7C3AED]">AI</span>
-            </span>
-          </div>
-
           {/* Headline */}
           <h1 className={`text-5xl font-bold ${isLight ? 'text-[#0F172A]' : 'text-[#F9FAFB]'} leading-[1.15] mb-4`}>
             Start your journey<br />
@@ -149,16 +140,6 @@ const Register = () => {
       {/* ── RIGHT PANEL — Form ── */}
       <div className={`w-full lg:w-[48%] xl:w-[45%] flex flex-col justify-center items-center p-8 sm:p-12 ${isLight ? 'bg-[#FFFFFF]' : 'bg-[#0B1120]'} overflow-y-auto`}>
         <div className="w-full max-w-[400px]">
-
-          {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-2 mb-10">
-            <div className="w-9 h-9 bg-[#7C3AED] rounded-xl flex items-center justify-center">
-              <Brain size={18} className="text-white" />
-            </div>
-            <span className={`text-xl font-bold ${isLight ? 'text-[#0F172A]' : 'text-[#F9FAFB]'}`}>
-              HireMind <span className="text-[#7C3AED]">AI</span>
-            </span>
-          </div>
 
           <h2 className={`text-3xl font-bold ${isLight ? 'text-[#0F172A]' : 'text-[#F9FAFB]'} mb-1`}>Create your account</h2>
           <p className={`${isLight ? 'text-[#64748B]' : 'text-[#9CA3AF]'} text-sm mb-8`}>Free forever · No credit card needed</p>
@@ -313,6 +294,41 @@ const Register = () => {
             <p className="text-center text-[#9CA3AF] text-xs pt-1 leading-relaxed">
               By registering, you agree to our Terms of Service and Privacy Policy.
             </p>
+
+            <div className="relative flex items-center gap-3 py-1">
+              <div className={`flex-1 h-px ${isLight ? 'bg-[#E2E8F0]' : 'bg-[#334155]'}`} />
+              <span className={`text-xs ${isLight ? 'text-[#64748B]' : 'text-[#9CA3AF]'}`}>or</span>
+              <div className={`flex-1 h-px ${isLight ? 'bg-[#E2E8F0]' : 'bg-[#334155]'}`} />
+            </div>
+
+            {/* Sign up with Google (OAuth redirect flow — uses selected role above) */}
+            <button
+              type="button"
+              disabled={isLoading || googleLoading}
+              onClick={async () => {
+                setGoogleLoading(true);
+                try {
+                  const res = await API.get(`/auth/google/url?role=${formData.role}`);
+                  window.location.href = res.data.url;
+                } catch (err) {
+                  toast.error(err.response?.data?.message || "Google sign-in is not configured yet");
+                  setGoogleLoading(false);
+                }
+              }}
+              className={`w-full py-3.5 font-semibold rounded-xl text-sm transition-all duration-150 active:scale-[0.98] flex items-center justify-center gap-2.5 border ${
+                isLight
+                  ? 'bg-white border-[#CBD5E1] text-[#0F172A] hover:bg-[#F8FAFC]'
+                  : 'bg-white/[0.03] border-[#334155] text-[#F9FAFB] hover:bg-white/[0.07]'
+              } disabled:opacity-60 disabled:cursor-not-allowed`}
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M23.5 12.3c0-.9-.1-1.5-.3-2.3H12v4.5h6.5c-.1 1.1-.8 2.7-2.4 3.8l-.1.1 3.5 2.7.2.1c2.2-2 3.8-5 3.8-8.9z" />
+                <path fill="#34A853" d="M12 24c3.2 0 6-1.1 7.9-2.9l-3.8-2.9c-1 .7-2.4 1.2-4.1 1.2-3.2 0-5.9-2.1-6.8-5l-.1.1-3.6 2.8v.1C3.5 21.3 7.4 24 12 24z" />
+                <path fill="#FBBC05" d="M5.2 14.4c-.2-.7-.4-1.5-.4-2.4s.1-1.7.4-2.4l-.1-.1-3.5-2.7-.1.1C.5 8.7 0 10.3 0 12s.5 3.3 1.5 4.7l3.7-2.3z" />
+                <path fill="#EA4335" d="M12 4.7c1.8 0 3 .8 3.7 1.4l3.3-3.2C17.9 1.1 15.2 0 12 0 7.4 0 3.5 2.7 1.5 6.9l3.7 2.8c1-2.9 3.6-5 6.8-5z" />
+              </svg>
+              {googleLoading ? "Redirecting to Google..." : `Continue with Google as ${formData.role === 'RECRUITER' ? 'Recruiter' : 'Candidate'}`}
+            </button>
 
             <div className="relative flex items-center gap-3 py-1">
               <div className={`flex-1 h-px ${isLight ? 'bg-[#E2E8F0]' : 'bg-[#334155]'}`} />

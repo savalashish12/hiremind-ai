@@ -185,7 +185,7 @@ const Home = () => {
           <div className="space-y-2">
             <div className="p-3.5 bg-slate-900/60 rounded-xl border border-slate-850 flex justify-between items-center">
               <div>
-                <p className="font-bold text-slate-200">Ashish Saval (94% Fit)</p>
+                <p className="font-bold text-slate-200">Aarav Sharma (94% Fit)</p>
                 <p className="text-[9px] text-slate-500">Skills: Java, React, SQL, Node.js</p>
               </div>
               <span className="bg-indigo-500/10 text-indigo-400 font-bold px-2 py-0.5 rounded text-[9px]">Rank #1</span>
@@ -228,7 +228,7 @@ const Home = () => {
             </div>
             <div className="py-2 flex justify-between">
               <span className="text-blue-400 font-bold">[RESUME_UPLOADED]</span>
-              <span className="text-slate-400">Candidate Ashish Saval uploaded CV</span>
+              <span className="text-slate-400">Candidate Aarav Sharma uploaded CV</span>
               <span className="text-slate-550">10 mins ago</span>
             </div>
             <div className="py-2 flex justify-between">
@@ -245,7 +245,7 @@ const Home = () => {
   const testimonials = [
     {
       avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop",
-      name: "Ashish Saval",
+      name: "Aarav Sharma",
       company: "MCA Candidate",
       feedback: "The mock MCQ system matched the Accenture test format exactly. I practiced online, exported my percentile report, and secured a campus placement!"
     },
@@ -367,7 +367,7 @@ const Home = () => {
                       AS
                     </div>
                     <div>
-                      <p className="font-bold text-white text-xs">Ashish Saval</p>
+                      <p className="font-bold text-white text-xs">Aarav Sharma</p>
                       <p className="text-[9px] text-slate-500">MCA Project Candidate</p>
                     </div>
                   </div>
@@ -754,7 +754,7 @@ const Home = () => {
               AI-driven career development and recruitment platform built and optimized for Master of Computer Applications (MCA) final evaluation metrics.
             </p>
             <div className="text-slate-500 space-y-1">
-              <p><strong>Candidate:</strong> Ashish Saval</p>
+              <p><strong>Candidate:</strong> Aarav Sharma</p>
               <p><strong>Subject:</strong> MCA Final Semester Project</p>
             </div>
           </div>

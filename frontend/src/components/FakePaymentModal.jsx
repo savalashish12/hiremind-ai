@@ -52,10 +52,14 @@ const ManualUpiPaymentModal = ({ isOpen, onClose, planName, billingCycle, amount
   }, [isOpen, qrTimer]);
 
   const formatTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
-  const upiIds = payee?.upiIds?.length ? payee.upiIds : ["7420873636@axl", "7420873636@ybl"];
-  const payeeName = payee?.payeeName || "Ashish Saval";
+  // Payee details come ONLY from the server env (GET /payment/manual/payee).
+  // No hardcoded IDs/names here — if the server has none configured, we show
+  // a notice instead of someone else's payment details.
+  const upiIds = payee?.upiIds?.length ? payee.upiIds : [];
+  const payeeName = payee?.payeeName || "";
+  const isConfigured = upiIds.length > 0;
   const qrSrc = payee?.qrImageUrl || "/upi-qr.jpg";
-  const autoUpiString = payee?.upiString || `upi://pay?pa=${upiIds[0]}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tn=${orderId}`;
+  const autoUpiString = payee?.upiString || (isConfigured ? `upi://pay?pa=${upiIds[0]}&pn=${encodeURIComponent(payeeName)}&am=${amount}&cu=INR&tn=${orderId}` : "");
 
   const copyText = async (text, label) => {
     try {
@@ -130,7 +134,7 @@ const ManualUpiPaymentModal = ({ isOpen, onClose, planName, billingCycle, amount
                 </div>
                 <div>
                   <p className="text-[10px] text-slate-500 font-bold uppercase">Payee (Merchant)</p>
-                  <p className="text-slate-200 mt-0.5 font-semibold">{payeeName} · HireMind AI</p>
+                  <p className="text-slate-200 mt-0.5 font-semibold">{payeeName ? `${payeeName} · HireMind AI` : "HireMind AI"}</p>
                 </div>
                 <div>
                   <p className="text-[10px] text-slate-500 font-bold uppercase">Billed To</p>
@@ -219,6 +223,11 @@ const ManualUpiPaymentModal = ({ isOpen, onClose, planName, billingCycle, amount
                 </button>
 
                 <form onSubmit={handleSubmit} className="flex-1 p-6 flex flex-col gap-4 overflow-y-auto">
+                  {!isConfigured && (
+                    <div className="bg-yellow-500/10 border border-yellow-500/20 text-yellow-300 text-xs font-semibold px-4 py-3 rounded-xl text-center">
+                      Payment details are not configured yet. Please contact support to complete your purchase.
+                    </div>
+                  )}
                   {activeTab === "qr" && (
                     <div className="flex flex-col items-center text-center space-y-3">
                       <div className="bg-white p-3 rounded-2xl shadow-md">

@@ -20,6 +20,9 @@ backend/dist/
 uploads/
 backend/uploads/
 
+# Owner's real UPI QR image (local-only; never commit payment credentials)
+frontend/public/upi-qr.jpg
+
 # Test coverage
 coverage/
 

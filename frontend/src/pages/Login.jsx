@@ -133,16 +133,6 @@ const Login = () => {
           }} />
 
         <div className="relative z-10">
-          {/* Logo */}
-          <div className="flex items-center gap-3 mb-16">
-            <div className={`w-10 h-10 bg-[#2563EB] rounded-2xl flex items-center justify-center shadow-lg ${isLight ? 'shadow-blue-600/20' : 'shadow-blue-900/50'}`}>
-              <Brain size={22} className="text-white" />
-            </div>
-            <span className={`text-2xl font-bold ${isLight ? 'text-[#0F172A]' : 'text-[#F9FAFB]'} tracking-tight`}>
-              HireMind <span className="text-[#2563EB]">AI</span>
-            </span>
-          </div>
-
           {/* Headline */}
           <h1 className={`text-5xl font-bold ${isLight ? 'text-[#0F172A]' : 'text-[#F9FAFB]'} leading-[1.15] mb-4`}>
             Your AI-Powered<br />
@@ -199,16 +189,6 @@ const Login = () => {
       {/* ── RIGHT PANEL — Form ── */}
       <div className={`w-full lg:w-[48%] xl:w-[45%] flex flex-col justify-center items-center p-8 sm:p-12 ${isLight ? 'bg-[#FFFFFF]' : 'bg-[#0B1120]'}`}>
         <div className="w-full max-w-[400px]">
-
-          {/* Mobile logo */}
-          <div className="lg:hidden flex items-center gap-2 mb-10">
-            <div className="w-9 h-9 bg-[#2563EB] rounded-xl flex items-center justify-center">
-              <Brain size={18} className="text-white" />
-            </div>
-            <span className={`text-xl font-bold ${isLight ? 'text-[#0F172A]' : 'text-[#F9FAFB]'}`}>
-              HireMind <span className="text-[#2563EB]">AI</span>
-            </span>
-          </div>
 
           <h2 className={`text-3xl font-bold ${isLight ? 'text-[#0F172A]' : 'text-[#F9FAFB]'} mb-1`}>Welcome back</h2>
           <p className={`${isLight ? 'text-[#64748B]' : 'text-[#9CA3AF]'} text-sm mb-8`}>Sign in to continue your journey</p>

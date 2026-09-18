@@ -119,12 +119,12 @@ async function main() {
     const resumeHistory = [
       {
         name: `Resume_${candidateNames[i].replace(" ", "_")}_v1.pdf`,
-        url: "https://res.cloudinary.com/dtewde9uz/image/upload/v1700000000/resumes/dummy_v1.pdf",
+        url: "https://res.cloudinary.com/demo/image/upload/v1700000000/resumes/dummy_v1.pdf",
         uploadedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
       },
       {
         name: `Resume_${candidateNames[i].replace(" ", "_")}_v2.pdf`,
-        url: "https://res.cloudinary.com/dtewde9uz/image/upload/v1700000000/resumes/dummy_v2.pdf",
+        url: "https://res.cloudinary.com/demo/image/upload/v1700000000/resumes/dummy_v2.pdf",
         uploadedAt: new Date().toISOString()
       }
     ];
@@ -135,7 +135,7 @@ async function main() {
         skills: skills,
         education: "Master of Computer Applications (MCA)",
         experience: `${(i % 3) + 1} years of experience in Software Development lifecycle.`,
-        resumeUrl: "https://res.cloudinary.com/dtewde9uz/image/upload/v1700000000/resumes/dummy_v2.pdf",
+        resumeUrl: "https://res.cloudinary.com/demo/image/upload/v1700000000/resumes/dummy_v2.pdf",
         professionalSummary: `Dedicated MCA graduate seeking to build robust software systems using modern technology stacks. Experienced in team collaboration and agile workflows.`,
         strengths: ["Problem Solving", "Technical Competency", "Team Collaboration"],
         weaknesses: ["Public Speaking", "Over-documentation"],

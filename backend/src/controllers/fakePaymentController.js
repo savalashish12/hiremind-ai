@@ -2,6 +2,7 @@ const crypto = require('crypto');
 const prisma = require('../config/prisma');
 const PDFDocument = require('pdfkit');
 const { pushToUser } = require('../utils/sseManager');
+const manualPayee = require('../config/manualPayment');
 
 // 1. Create Fake Order ID
 exports.createFakeOrder = async (req, res) => {
@@ -286,7 +287,7 @@ exports.downloadInvoice = async (req, res) => {
     // 1. Title & Header
     doc.fillColor(primaryColor).fontSize(20).font('Helvetica-Bold').text('HireMind AI', 50, 50);
     doc.fillColor(darkColor).fontSize(10).font('Helvetica').text('AI Recruitment Platform', 50, 75);
-    doc.text('support@hiremind.ai', 50, 88);
+    doc.text(manualPayee.supportEmail || 'support@hiremind.ai', 50, 88);
 
     doc.fillColor(primaryColor).fontSize(22).font('Helvetica-Bold').text('INVOICE', 400, 50, { align: 'right' });
     doc.fillColor(darkColor).fontSize(9).font('Helvetica-Bold').text(`Invoice #: HM-${payment.id.slice(0, 8).toUpperCase()}`, 400, 75, { align: 'right' });

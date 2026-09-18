@@ -272,7 +272,7 @@ exports.rejectPayment = async (req, res) => {
       data: {
         userId: payment.userId,
         title: "Payment verification failed",
-        message: `UTR ${payment.transactionId} could not be verified. Reason: ${reason}. Please re-check and resubmit or contact ${payee.supportEmail}.`,
+        message: `UTR ${payment.transactionId} could not be verified. Reason: ${reason}. Please re-check and resubmit${payee.supportEmail ? ` or contact ${payee.supportEmail}` : ""}.`,
       },
     });
     pushToUser(payment.userId, { type: "notification", title: "Payment verification failed", message: `UTR ${payment.transactionId} rejected: ${reason}.` });
