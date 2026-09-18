@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const prisma = require('../config/prisma');
 const PDFDocument = require('pdfkit');
+const { pushToUser } = require('../utils/sseManager');
 
 // 1. Create Fake Order ID
 exports.createFakeOrder = async (req, res) => {
@@ -73,6 +74,7 @@ exports.processFakePayment = async (req, res) => {
           message: `Your payment of ₹${amount} for the ${planName} Plan has failed. Reason: Issuer bank declined.`,
         },
       });
+      pushToUser(userId, { type: 'notification', title: 'Subscription Payment Failed', message: `Payment of ₹${amount} failed.` });
 
       return res.status(200).json({
         success: false,
@@ -138,6 +140,7 @@ exports.processFakePayment = async (req, res) => {
         message: `Success! You are now subscribed to the ${planName} Plan until ${expiryDate.toLocaleDateString()}.`,
       },
     });
+    pushToUser(userId, { type: 'notification', title: 'Subscription Activated! 🎉', message: `You are now on the ${planName} Plan.` });
 
     return res.status(200).json({
       success: true,

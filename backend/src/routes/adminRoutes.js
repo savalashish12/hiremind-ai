@@ -3,6 +3,7 @@ const router = express.Router();
 const protect = require('../middleware/authMiddleware');
 const authorizeRoles = require('../middleware/roleMiddleware');
 const prisma = require('../config/prisma');
+const logActivity = require('../utils/activityLogger');
 
 // Admin Analytics
 router.get('/analytics', protect, authorizeRoles('ADMIN'), async (req, res) => {
@@ -61,6 +62,8 @@ router.put('/users/:id/suspend', protect, authorizeRoles('ADMIN'), async (req, r
       data: { isSuspended },
     });
 
+    logActivity({ userId: req.user.id, action: isSuspended ? 'USER_SUSPENDED' : 'USER_ACTIVATED', entity: 'User', entityId: id, details: `${user.email} ${isSuspended ? 'suspended' : 'activated'} by admin`, req });
+
     res.json({ message: `User account is now ${isSuspended ? 'suspended' : 'activated'}`, user: updatedUser });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -95,7 +98,10 @@ router.delete('/users/:id', protect, authorizeRoles('ADMIN'), async (req, res) =
     // If they were a candidate, delete their applications
     await prisma.application.deleteMany({ where: { candidateId: id } });
 
+    const deletedEmail = user.email;
     await prisma.user.delete({ where: { id } });
+
+    logActivity({ userId: req.user.id, action: 'USER_DELETED', entity: 'User', entityId: id, details: `${deletedEmail} deleted by admin`, req });
 
     res.json({ message: 'User and all related profiles and data deleted successfully' });
   } catch (error) {
@@ -134,7 +140,10 @@ router.delete('/jobs/:id', protect, authorizeRoles('ADMIN'), async (req, res) =>
     await prisma.application.deleteMany({ where: { jobId: id } });
     await prisma.savedJob.deleteMany({ where: { jobId: id } });
 
+    const deletedTitle = job.title;
     await prisma.job.delete({ where: { id } });
+
+    logActivity({ userId: req.user.id, action: 'JOB_DELETED', entity: 'Job', entityId: id, details: `"${deletedTitle}" deleted by admin`, req });
 
     res.json({ message: 'Job posting deleted successfully' });
   } catch (error) {
@@ -142,14 +151,46 @@ router.delete('/jobs/:id', protect, authorizeRoles('ADMIN'), async (req, res) =>
   }
 });
 
-// Get Activity Logs
+// Get Activity Logs (paginated + filters)
 router.get('/activity-logs', protect, authorizeRoles('ADMIN'), async (req, res) => {
   try {
-    const logs = await prisma.activityLog.findMany({
-      orderBy: { createdAt: 'desc' },
-      take: 100
+    const { action, search, startDate, endDate, page = 1, limit = 25 } = req.query;
+    const where = {};
+    if (action && action !== 'ALL') where.action = action;
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) where.createdAt.lte = new Date(endDate);
+    }
+    if (search) {
+      where.OR = [
+        { userId: { contains: search, mode: 'insensitive' } },
+        { details: { contains: search, mode: 'insensitive' } },
+        { action: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const pageSize = Math.min(100, Math.max(1, parseInt(limit, 10) || 25));
+    const [total, logs] = await Promise.all([
+      prisma.activityLog.count({ where }),
+      prisma.activityLog.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        skip: (pageNum - 1) * pageSize,
+        take: pageSize,
+      }),
+    ]);
+    // Attach user info (best-effort; users may have been deleted)
+    const userIds = [...new Set(logs.map((l) => l.userId))];
+    const users = await prisma.user.findMany({
+      where: { id: { in: userIds } },
+      select: { id: true, fullName: true, email: true, role: true },
     });
-    res.json(logs);
+    const userMap = Object.fromEntries(users.map((u) => [u.id, u]));
+    res.json({
+      logs: logs.map((l) => ({ ...l, user: userMap[l.userId] || null })),
+      pagination: { total, page: pageNum, limit: pageSize, pages: Math.ceil(total / pageSize) },
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

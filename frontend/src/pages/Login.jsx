@@ -17,6 +17,8 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isLight, setIsLight] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resending, setResending] = useState(false);
 
   useEffect(() => {
     const handleThemeChange = () => {
@@ -47,11 +49,28 @@ const Login = () => {
       }
     } catch (error) {
       console.error("Login failed:", error);
+      setNeedsVerification(!!error.response?.data?.needsVerification);
       toast.error(
         error.response?.data?.message || error.message || "Failed to login"
       );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!formData.email) {
+      toast.error("Enter your email first");
+      return;
+    }
+    setResending(true);
+    try {
+      const res = await API.post("/auth/resend-verification", { email: formData.email });
+      toast.success(res.data.message || "Verification email resent!");
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to resend email");
+    } finally {
+      setResending(false);
     }
   };
 
@@ -222,11 +241,11 @@ const Login = () => {
                   isLight ? 'text-[#64748B] group-hover:text-[#334155]' : 'text-[#9CA3AF] group-hover:text-[#D1D5DB]'
                 } transition-colors`}>Remember me</span>
               </label>
-              <button type="button" className={`text-sm font-medium transition-colors ${
+              <a href="/forgot-password" className={`text-sm font-medium transition-colors ${
                 isLight ? 'text-[#2563EB] hover:text-blue-800' : 'text-[#06B6D4] hover:text-[#60a5fa]'
               }`}>
                 Forgot password?
-              </button>
+              </a>
             </div>
 
             {/* Submit */}
@@ -262,6 +281,17 @@ const Login = () => {
                 Create one free
               </a>
             </p>
+
+            {needsVerification && (
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={resending}
+                className="w-full text-center text-sm font-semibold text-amber-400 hover:text-amber-300 disabled:opacity-60"
+              >
+                {resending ? "Resending..." : "📧 Resend verification email"}
+              </button>
+            )}
 
             <p className={`text-center ${isLight ? 'text-[#64748B]' : 'text-[#9CA3AF]'} text-xs pt-1`}>
               Admin? Use your admin email below — same login form.

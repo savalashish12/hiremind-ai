@@ -146,7 +146,30 @@ HireMind AI Recruitment Team
   }
 };
 
+const sendVerificationEmail = async (toEmail, name, token) => {
+  const verifyUrl = `${process.env.FRONTEND_URL || "http://localhost:5173"}/verify-email/${token}`;
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: toEmail,
+    subject: "Verify your HireMind AI email",
+    text: `Hello ${name},\n\nThanks for registering on HireMind AI.\nClick to verify your email:\n${verifyUrl}\n\nThis link expires once used. If you did not register, ignore this email.\n\nRegards,\nHireMind AI`,
+  });
+  console.log("Verification email sent to", toEmail);
+};
+
+const sendPasswordOtpEmail = async (toEmail, name, otp) => {
+  await transporter.sendMail({
+    from: process.env.EMAIL_USER,
+    to: toEmail,
+    subject: "HireMind AI password reset OTP",
+    text: `Hello ${name},\n\nYour password reset OTP is: ${otp}\nIt expires in 15 minutes.\n\nIf you did not request this, ignore this email.\n\nRegards,\nHireMind AI`,
+  });
+  console.log("Password reset OTP sent to", toEmail);
+};
+
 module.exports = {
   sendStatusEmail,
   sendInterviewEmail,
+  sendVerificationEmail,
+  sendPasswordOtpEmail,
 };

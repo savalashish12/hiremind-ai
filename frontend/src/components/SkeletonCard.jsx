@@ -23,6 +23,18 @@ export const ApplicantRowSkeleton = () => (
   </tr>
 );
 
+const SkeletonCard = ({ lines = 3 }) => (
+  <div className="animate-pulse bg-slate-800 rounded-xl p-4 space-y-3 border border-slate-700">
+    <div className="h-4 bg-slate-700 rounded w-3/4" />
+    {Array(lines).fill(0).map((_, i) => (
+      <div key={i} className="h-3 bg-slate-700 rounded"
+           style={{ width: `${60 + i * 10}%` }} />
+    ))}
+  </div>
+);
+
+export default SkeletonCard;
+
 export const StatCardSkeleton = () => (
   <div className="bg-slate-800 rounded-2xl p-6 border border-slate-700 animate-pulse">
     <div className="h-3 w-20 bg-slate-700 rounded mb-3" />

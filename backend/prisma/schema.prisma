@@ -32,6 +32,10 @@ model User {
   password    String
   role        Role
   isSuspended Boolean  @default(false)
+  isVerified  Boolean  @default(false)
+  verifyToken String?
+  resetOtp        String?
+  resetOtpExpiry  DateTime?
   createdAt   DateTime @default(now())
   subscriptionTier   String   @default("FREE")
   subscriptionEndsAt DateTime?
@@ -243,10 +247,17 @@ model ExternalJob {
 
 model ActivityLog {
   id         String   @id @default(uuid())
-  action     String   // "JOB_CREATED", "JOB_UPDATED", "RESUME_UPLOADED", "APPLICATION_SUBMITTED", "INTERVIEW_SCHEDULED"
+  action     String   // "LOGIN", "REGISTER", "JOB_CREATED", "JOB_UPDATED", "JOB_DELETED", "APPLICATION_SUBMITTED", "INTERVIEW_SCHEDULED", "OFFER_LETTER_GENERATED", "PAYMENT_SUBMITTED", "PAYMENT_APPROVED", "USER_SUSPENDED", "USER_DELETED"
   details    String
   userId     String
+  entity     String?
+  entityId   String?
+  ipAddress  String?
   createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 model Subscription {

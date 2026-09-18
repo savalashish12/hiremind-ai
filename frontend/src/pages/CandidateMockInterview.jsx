@@ -3,6 +3,7 @@ import { useLocation } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
 import { jsPDF } from "jspdf";
+import EmptyState from "../components/EmptyState";
 // Recharts removed since charts are not rendered in this component
 
 // Static list of 300 companies for corporate mock assessment
@@ -973,7 +974,11 @@ const CandidateMockInterview = () => {
           {loadingHistory ? (
             <div className="py-10 text-center animate-pulse text-slate-400 text-xs">Fetching logs...</div>
           ) : history.length === 0 ? (
-            <p className="text-slate-500 text-xs py-10 text-center">No past practice logs found.</p>
+            <EmptyState
+              icon="🎤"
+              title="No Interviews Yet"
+              message="Start a mock interview to practice."
+            />
           ) : (
             <div className="space-y-3 flex-1 overflow-y-auto">
               {history.map((session) => {

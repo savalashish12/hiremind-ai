@@ -16,6 +16,7 @@ const {
   scheduleInterview,
   generateOfferLetter,
   downloadOfferLetter,
+  respondToOffer,
   bulkUpdateStatus,
 } = require(
   "../controllers/applicationController"
@@ -89,6 +90,13 @@ router.get(
   "/:applicationId/offer-letter/download",
   protect,
   downloadOfferLetter
+);
+
+router.patch(
+  "/:applicationId/respond",
+  protect,
+  authorizeRoles("CANDIDATE"),
+  respondToOffer
 );
 
 module.exports = router;

@@ -133,6 +133,28 @@ const getCareerRoadmap = async (req, res) => {
   }
 };
 
+const generateSummary = async (req, res) => {
+  try {
+    const { skills, experience, education } = req.body;
+    const skillList = Array.isArray(skills) ? skills.join(", ") : String(skills || "");
+    const expText = Array.isArray(experience)
+      ? experience.map((e) => `${e.role || ""} at ${e.company || ""}`).filter(Boolean).join("; ")
+      : String(experience || "");
+    const eduText = Array.isArray(education)
+      ? education.map((e) => `${e.degree || ""}, ${e.institution || ""}`).filter(Boolean).join("; ")
+      : String(education || "");
+    if (!skillList && !expText) {
+      return res.status(400).json({ message: "Provide at least skills or experience to generate a summary." });
+    }
+    const { generateResumeSummaryAI } = require("../services/aiService");
+    const summary = await generateResumeSummaryAI(skillList, expText, eduText);
+    res.status(200).json({ summary });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Failed to generate summary" });
+  }
+};
+
 const getAIJobRecommendations = async (req, res) => {
   try {
     const candidateProfile = await prisma.candidateProfile.findUnique({
@@ -304,6 +326,7 @@ module.exports = {
   compareTwoCandidates,
   getResumeSuggestions,
   getCareerRoadmap,
+  generateSummary,
   getAIJobRecommendations,
   uploadCompanyDocument,
   getCompanyDocuments,

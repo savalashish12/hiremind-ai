@@ -18,7 +18,10 @@ import {
   Moon,
   Sparkles,
   Search,
-  CreditCard
+  CreditCard,
+  FileText,
+  Bookmark,
+  Brain
 } from "lucide-react";
 
 const Navbar = () => {
@@ -347,6 +350,30 @@ const Navbar = () => {
                             >
                               <Sparkles size={14} />
                               AI ATS Scanner
+                            </Link>
+                            <Link
+                              to="/candidate/resume-builder"
+                              onClick={() => setShowUserDropdown(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition-all"
+                            >
+                              <FileText size={14} />
+                              Resume Builder
+                            </Link>
+                            <Link
+                              to="/candidate/saved-jobs"
+                              onClick={() => setShowUserDropdown(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition-all"
+                            >
+                              <Bookmark size={14} />
+                              Saved Jobs
+                            </Link>
+                            <Link
+                              to="/candidate/mock-interview"
+                              onClick={() => setShowUserDropdown(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition-all"
+                            >
+                              <Brain size={14} />
+                              Mock Interview
                             </Link>
                           </>
                         )}

@@ -1,9 +1,10 @@
 import { useEffect, useState, useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import toast from "react-hot-toast";
 import API from "../services/api";
 import { motion, AnimatePresence } from "framer-motion";
 import { ApplicantRowSkeleton } from "../components/SkeletonCard";
+import EmptyState from "../components/EmptyState";
 import {
   Sparkles,
   Search,
@@ -308,9 +309,11 @@ const Applicants = () => {
     }
   };
 
+  const routeLocation = useLocation();
+
   useEffect(() => {
     fetchApplicants();
-  }, []);
+  }, [routeLocation.pathname, routeLocation.key]);
 
   const filteredApplications = useMemo(() => {
     return applications.filter((app) => {
@@ -686,8 +689,12 @@ const Applicants = () => {
                       Array(5).fill(0).map((_, i) => <ApplicantRowSkeleton key={i} />)
                     ) : getSortedApplications().length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="text-center py-16 text-slate-500 text-xs font-semibold">
-                          No candidates match your filters criteria.
+                        <td colSpan={6}>
+                          <EmptyState
+                            icon="👥"
+                            title="No Applicants Yet"
+                            message="Share your job posting to attract candidates."
+                          />
                         </td>
                       </tr>
                     ) : (
@@ -739,17 +746,33 @@ const Applicants = () => {
                                 <option value="INTERVIEW_SCHEDULED">Interview Scheduled</option>
                                 <option value="INTERVIEWED">Interviewed</option>
                                 <option value="SELECTED">Selected</option>
+                                <option value="OFFERED">Offered</option>
                                 <option value="REJECTED">Rejected</option>
                                 <option value="HIRED">Hired</option>
+                                <option value="DECLINED">Declined</option>
                               </select>
                             </td>
                             <td className="px-4 py-3.5">
-                              <button
-                                onClick={() => setInspectApp(application)}
-                                className="text-[10px] bg-slate-800 hover:bg-slate-750 text-slate-200 px-3 py-1 rounded-lg border border-slate-700 transition-all font-bold cursor-pointer"
-                              >
-                                Inspect
-                              </button>
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => setInspectApp(application)}
+                                  className="text-[10px] bg-slate-800 hover:bg-slate-750 text-slate-200 px-3 py-1 rounded-lg border border-slate-700 transition-all font-bold cursor-pointer"
+                                >
+                                  Inspect
+                                </button>
+                                {["INTERVIEW_SCHEDULED", "INTERVIEWED", "SELECTED"].includes(application.status) && (
+                                  <button
+                                    onClick={() => {
+                                      setSelectedAppForOffer(application);
+                                      setOfferRole(application.job?.title || "");
+                                      setShowOfferModal(true);
+                                    }}
+                                    className="text-[10px] bg-amber-600/15 hover:bg-amber-600 text-amber-400 hover:text-white px-3 py-1 rounded-lg border border-amber-700/40 transition-all font-bold cursor-pointer whitespace-nowrap"
+                                  >
+                                    📄 Send Offer Letter
+                                  </button>
+                                )}
+                              </div>
                             </td>
                           </tr>
                         );

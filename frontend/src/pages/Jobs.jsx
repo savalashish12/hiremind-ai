@@ -22,6 +22,7 @@ import {
   GraduationCap
 } from "lucide-react";
 import { JobCardSkeleton } from "../components/SkeletonCard";
+import EmptyState from "../components/EmptyState";
 
 const AVATAR_COLORS = ['bg-blue-600','bg-purple-600','bg-teal-600','bg-pink-600','bg-amber-600','bg-indigo-600'];
 const getAvatarColor = (name) => AVATAR_COLORS[(name?.charCodeAt(0) || 0) % AVATAR_COLORS.length];
@@ -533,13 +534,16 @@ const Jobs = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-            {loading ? Array(6).fill(0).map((_,i) => <JobCardSkeleton key={i} />) :
-             displayedJobs.length === 0 ? (
-               <div className="col-span-full text-center py-20 bg-slate-900/20 rounded-3xl border border-slate-850">
-                 <p className="text-lg text-slate-400 font-bold mb-1">No vacancies match your query</p>
-                 <p className="text-xs text-slate-500">Modify keywords or reset filters sidebar.</p>
-               </div>
-             ) : (
+             {loading ? Array(6).fill(0).map((_,i) => <JobCardSkeleton key={i} />) :
+              displayedJobs.length === 0 ? (
+                <div className="col-span-full">
+                  <EmptyState
+                    icon="💼"
+                    title="No Jobs Available"
+                    message="New jobs are fetched every 12 hours. Try different keywords or reset filters."
+                  />
+                </div>
+              ) : (
                displayedJobs.map(job => (
                  <JobCard
                    key={job.id}

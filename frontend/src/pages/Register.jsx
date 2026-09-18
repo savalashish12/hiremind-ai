@@ -53,8 +53,8 @@ const Register = () => {
     e.preventDefault();
     try {
       setIsLoading(true);
-      await API.post("/auth/register", formData);
-      toast.success("Identity Enlisted Successfully!");
+      const res = await API.post("/auth/register", formData);
+      toast.success(res.data.message || "Registered! Please verify your email.");
       navigate("/login");
     } catch (error) {
       console.error("Registration failed:", error);

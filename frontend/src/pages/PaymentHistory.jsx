@@ -25,7 +25,6 @@ const PaymentHistory = () => {
         const legacy = await api.get("/payment/fake/history");
         setPayments(legacy.data.payments);
       }
-      setPayments(res.data.payments);
     } catch {
       toast.error("Failed to fetch payment history");
     } finally {

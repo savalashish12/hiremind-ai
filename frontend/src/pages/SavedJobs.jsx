@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
+import EmptyState from "../components/EmptyState";
 
 const SavedJobs = () => {
   const location = useLocation();
@@ -66,16 +67,12 @@ const SavedJobs = () => {
           <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : savedJobs.length === 0 ? (
-        <div className="text-center py-20 bg-slate-800/40 border border-slate-700 rounded-3xl text-slate-400">
-          <span className="text-3xl block mb-2">🏷️</span>
-          <p className="font-medium">You haven't bookmarked any jobs yet.</p>
-          <a
-            href="/jobs"
-            className="mt-4 bg-blue-600 hover:bg-blue-750 font-bold px-5 py-2 rounded-lg text-xs transition-colors inline-block"
-          >
-            Browse Jobs
-          </a>
-        </div>
+        <EmptyState
+          icon="🔖"
+          title="No Saved Jobs"
+          message="Bookmark jobs you like to apply later."
+          action={{ label: "Browse Jobs", href: "/jobs" }}
+        />
       ) : (
         <div className="grid gap-6">
           {savedJobs.map((item) => {

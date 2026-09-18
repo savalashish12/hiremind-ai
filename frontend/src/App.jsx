@@ -30,6 +30,9 @@ import ScrollToTop from "./components/ScrollToTop";
 import CommandPalette from "./components/CommandPalette";
 import ResumeBuilder from "./pages/ResumeBuilder";
 import PaymentHistory from "./pages/PaymentHistory";
+import NotFound from "./pages/NotFound";
+import ForgotPassword from "./pages/ForgotPassword";
+import VerifyEmail from "./pages/VerifyEmail";
 
 function App() {
 
@@ -59,6 +62,16 @@ function App() {
         <Route
           path="/register"
           element={<Register />}
+        />
+
+        <Route
+          path="/forgot-password"
+          element={<ForgotPassword />}
+        />
+
+        <Route
+          path="/verify-email/:token"
+          element={<VerifyEmail />}
         />
 
         <Route
@@ -184,6 +197,17 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+        <Route
+          path="/candidate/payment-history"
+          element={
+            <ProtectedRoute role="CANDIDATE">
+              <PaymentHistory />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path="*" element={<NotFound />} />
       </Routes>
       </ErrorBoundary>
 

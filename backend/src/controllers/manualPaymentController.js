@@ -1,6 +1,8 @@
 const crypto = require("crypto");
 const prisma = require("../config/prisma");
 const payee = require("../config/manualPayment");
+const logActivity = require("../utils/activityLogger");
+const { pushToUser } = require("../utils/sseManager");
 
 const PLAN_PRICES = {
   PRO: { monthly: 99, yearly: 990 },
@@ -144,6 +146,9 @@ exports.submitManualPayment = async (req, res) => {
         message: `We received UTR ${cleanUtr} for ₹${amount} (${String(planName).toUpperCase()} / ${billingCycle}). Admin will verify and activate your plan shortly.`,
       },
     });
+    pushToUser(userId, { type: "notification", title: "Payment submitted for verification ⏳", message: `UTR ${cleanUtr} received. Admin will verify shortly.` });
+
+    logActivity({ userId, action: "PAYMENT_SUBMITTED", entity: "Payment", entityId: payment.id, details: `UTR ${cleanUtr} for ₹${amount} (${String(planName).toUpperCase()}/${billingCycle})`, req });
 
     return res.status(201).json({
       success: true,
@@ -237,6 +242,8 @@ exports.approvePayment = async (req, res) => {
         message: `Your UPI payment (UTR ${payment.transactionId}) is verified. ${payment.planName} plan active till ${expiryDate.toLocaleDateString()}.`,
       },
     });
+    pushToUser(payment.userId, { type: "notification", title: "Subscription Activated! 🎉", message: `UTR ${payment.transactionId} verified. ${payment.planName} plan active.` });
+    logActivity({ userId: req.user.id, action: "PAYMENT_APPROVED", entity: "Payment", entityId: id, details: `UTR ${payment.transactionId} (₹${payment.amount}) approved`, req });
     return res.status(200).json({ success: true, message: "Payment approved and subscription activated" });
   } catch (error) {
     console.error("approvePayment error:", error);
@@ -268,6 +275,8 @@ exports.rejectPayment = async (req, res) => {
         message: `UTR ${payment.transactionId} could not be verified. Reason: ${reason}. Please re-check and resubmit or contact ${payee.supportEmail}.`,
       },
     });
+    pushToUser(payment.userId, { type: "notification", title: "Payment verification failed", message: `UTR ${payment.transactionId} rejected: ${reason}.` });
+    logActivity({ userId: req.user.id, action: "PAYMENT_REJECTED", entity: "Payment", entityId: id, details: `UTR ${payment.transactionId} rejected: ${reason}`, req });
     return res.status(200).json({ success: true, message: "Payment rejected" });
   } catch (error) {
     console.error("rejectPayment error:", error);

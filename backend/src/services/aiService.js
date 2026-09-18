@@ -332,6 +332,21 @@ function localFallbackAnswer(question, picked) {
   return `(Offline mode — Gemini unavailable. Showing the most relevant indexed excerpts:)\n\nQuestion: ${question}\n\n${bullets}\n\nUpload more specific documents or retry when the AI service is back for a synthesized answer.`;
 }
 
+const generateResumeSummaryAI = async (skills, experience, education) => {
+  try {
+    const prompt = `Write a professional resume summary in 3 sentences for a candidate with these skills: ${skills}. Experience: ${experience || "entry level"}. Education: ${education || "not specified"}. Sound confident and human. Under 60 words. Return ONLY the summary text, no JSON.`;
+    const response = await gemini.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: prompt,
+    });
+    return response.text.trim();
+  } catch (error) {
+    console.error("Gemini Summary Error: ", error);
+    const skillStr = skills || "modern technologies";
+    return `Motivated professional skilled in ${skillStr}${experience ? ` with experience including ${experience}` : ""}. Known for delivering clean, reliable work and learning quickly in fast-paced teams. Seeking to contribute strong technical and collaboration skills to a growth-focused organization.`;
+  }
+};
+
 const askKnowledgeBase = async (documents, question) => {
   const picked = retrieveRelevantChunks(documents, question);
   const { context, sources } = buildRagContext(picked);
@@ -859,6 +874,7 @@ module.exports = {
   compareCandidates,
   generateResumeSuggestions,
   generateCareerRoadmap,
+  generateResumeSummaryAI,
   askKnowledgeBase,
   analyzeATS,
   analyzeSkillGap,

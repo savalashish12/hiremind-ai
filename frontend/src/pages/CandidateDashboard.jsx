@@ -3,6 +3,9 @@ import { useLocation, Link } from "react-router-dom";
 import API from "../services/api";
 import toast from "react-hot-toast";
 import ResumeUpload from "../components/ResumeUpload";
+import HelperMascot from "../components/HelperMascot";
+import SkeletonCard, { StatCardSkeleton } from "../components/SkeletonCard";
+import EmptyState from "../components/EmptyState";
 import { motion, AnimatePresence } from "framer-motion";
 import { NotificationContext } from "../context/NotificationContext";
 import {
@@ -62,8 +65,11 @@ const STAGE_DISPLAY = {
   InterviewScheduled: 'Interview', Selected: 'Selected', Hired: 'Hired ✓'
 };
 
-const ApplicationCard = ({ app }) => {
+const ApplicationCard = ({ app, onRespond, respondingId }) => {
   const isRejected = app.pipelineStage === 'Rejected' || app.status === 'REJECTED';
+  const isOffered = app.status === 'OFFERED';
+  const isHired = app.status === 'HIRED';
+  const isDeclined = app.status === 'DECLINED';
   return (
     <div className="bg-slate-800 border border-slate-700 hover:border-slate-600 rounded-2xl p-5 mb-4 transition-all">
       {/* Header */}
@@ -136,23 +142,58 @@ const ApplicationCard = ({ app }) => {
 
       {/* Offer letter block */}
       {app.offerLetterUrl && (
-        <div className="mt-3 pt-3 border-t border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs">
-          <div>
-            <h5 className="font-bold text-indigo-400 flex items-center gap-1.5">
-              <FileText size={13} /> Official Offer Letter Issued
-            </h5>
-            <p className="text-slate-450 text-[10px] mt-0.5 leading-relaxed">
-              Congratulations! Issued position: <strong>{app.offerLetterDetails?.role || app.job?.title}</strong> at <strong>{app.offerLetterDetails?.companyName || "Accenture Corporate"}</strong>.
-            </p>
+        <div className="mt-3 pt-3 border-t border-slate-700 flex flex-col gap-3 text-xs">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <div>
+              <h5 className="font-bold text-indigo-400 flex items-center gap-1.5">
+                <FileText size={13} /> Official Offer Letter Issued
+                {isOffered && (
+                  <span className="ml-1 bg-yellow-500/15 text-yellow-300 border border-yellow-500/30 px-2 py-0.5 rounded-full text-[10px] font-extrabold">
+                    🎉 Offer Received
+                  </span>
+                )}
+                {isHired && (
+                  <span className="ml-1 bg-green-500/15 text-green-300 border border-green-500/30 px-2 py-0.5 rounded-full text-[10px] font-extrabold">
+                    Accepted ✓
+                  </span>
+                )}
+                {isDeclined && (
+                  <span className="ml-1 bg-slate-500/15 text-slate-400 border border-slate-500/30 px-2 py-0.5 rounded-full text-[10px] font-extrabold">
+                    Declined
+                  </span>
+                )}
+              </h5>
+              <p className="text-slate-450 text-[10px] mt-0.5 leading-relaxed">
+                Congratulations! Issued position: <strong>{app.offerLetterDetails?.role || app.job?.title}</strong> at <strong>{app.offerLetterDetails?.companyName || "Accenture Corporate"}</strong>.
+              </p>
+            </div>
+            <a
+              href={app.offerLetterUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="bg-green-600 hover:bg-green-550 text-white font-bold px-4.5 py-2 rounded-xl transition-all shadow-md text-xs cursor-pointer inline-flex items-center gap-1 whitespace-nowrap"
+            >
+              Download Offer Letter <ChevronRight size={12} />
+            </a>
           </div>
-          <a
-            href={`http://localhost:5000/api/candidate/document?url=${encodeURIComponent(app.offerLetterUrl)}`}
-            target="_blank"
-            rel="noreferrer"
-            className="bg-green-600 hover:bg-green-550 text-white font-bold px-4.5 py-2 rounded-xl transition-all shadow-md text-xs cursor-pointer inline-flex items-center gap-1 whitespace-nowrap"
-          >
-            Download PDF <ChevronRight size={12} />
-          </a>
+          {isOffered && (
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button
+                onClick={() => onRespond?.(app.id, "ACCEPT")}
+                disabled={respondingId === app.id}
+                className="flex-1 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-bold py-2 rounded-xl transition-all text-xs"
+              >
+                {respondingId === app.id ? "Submitting..." : "Accept Offer"}
+              </button>
+              <button
+                onClick={() => onRespond?.(app.id, "DECLINE")}
+                disabled={respondingId === app.id}
+                className="flex-1 bg-slate-800 hover:bg-red-600/80 disabled:opacity-50 border border-slate-700 text-slate-200 font-bold py-2 rounded-xl transition-all text-xs"
+              >
+                Decline Offer
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -183,6 +224,8 @@ const CandidateDashboard = () => {
   });
   const [savingProfile, setSavingProfile] = useState(false);
   const [history, setHistory] = useState([]);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [respondingId, setRespondingId] = useState("");
 
   const fetchHistory = async () => {
     try {
@@ -231,6 +274,25 @@ const CandidateDashboard = () => {
     }
   };
 
+  const handleOfferResponse = async (applicationId, decision) => {
+    const ok = window.confirm(
+      decision === "ACCEPT"
+        ? "Accept this offer? Your status will update to HIRED."
+        : "Decline this offer? This cannot be undone."
+    );
+    if (!ok) return;
+    setRespondingId(applicationId);
+    try {
+      const res = await API.patch(`/application/${applicationId}/respond`, { decision });
+      toast.success(res.data.message || "Response recorded!");
+      fetchApplications();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to record response");
+    } finally {
+      setRespondingId("");
+    }
+  };
+
   const generateCareerHub = async () => {
     setLoadingAi(true);
     try {
@@ -263,10 +325,9 @@ const CandidateDashboard = () => {
   };
 
   useEffect(() => {
-    fetchApplications();
-    fetchProfile();
-    fetchRecommendations();
-    fetchHistory();
+    setPageLoading(true);
+    Promise.allSettled([fetchApplications(), fetchProfile(), fetchRecommendations(), fetchHistory()])
+      .finally(() => setPageLoading(false));
   }, [location.pathname, location.key]);
 
   // Visual status timeline stages config
@@ -358,6 +419,17 @@ const CandidateDashboard = () => {
     interviewReadiness += 15;
   }
   interviewReadiness = Math.min(100, Math.round(interviewReadiness));
+
+  if (pageLoading) {
+    return (
+      <div className="p-6 md:p-10 max-w-7xl mx-auto min-h-screen space-y-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+          {Array(4).fill(0).map((_, i) => <StatCardSkeleton key={i} />)}
+        </div>
+        <div className="grid gap-4">{Array(3).fill(0).map((_, i) => <SkeletonCard key={i} />)}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 md:p-10 max-w-7xl mx-auto min-h-screen space-y-8 text-slate-100">
@@ -673,7 +745,7 @@ const CandidateDashboard = () => {
                   ) : (
                     <div className="grid gap-5">
                       {applications.map((app) => (
-                        <ApplicationCard key={app.id} app={app} />
+                        <ApplicationCard key={app.id} app={app} onRespond={handleOfferResponse} respondingId={respondingId} />
                       ))}
                     </div>
                   )}
@@ -1033,6 +1105,7 @@ const CandidateDashboard = () => {
 
       </div>
 
+      <HelperMascot />
     </div>
   );
 };

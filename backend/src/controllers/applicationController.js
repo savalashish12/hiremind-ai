@@ -597,6 +597,57 @@ const downloadOfferLetter = async (req, res) => {
   }
 };
 
+const respondToOffer = async (req, res) => {
+  try {
+    const { applicationId } = req.params;
+    const { decision } = req.body; // "ACCEPT" | "DECLINE"
+
+    if (!["ACCEPT", "DECLINE"].includes(decision)) {
+      return res.status(400).json({ message: 'Decision must be "ACCEPT" or "DECLINE".' });
+    }
+
+    const application = await prisma.application.findUnique({
+      where: { id: applicationId },
+      include: { job: { select: { title: true, recruiterId: true } } },
+    });
+
+    if (!application) {
+      return res.status(404).json({ message: "Application not found" });
+    }
+    if (application.candidateId !== req.user.id) {
+      return res.status(403).json({ message: "Not your application." });
+    }
+    if (application.status !== "OFFERED") {
+      return res.status(400).json({ message: `Only OFFERED applications can be answered (current: ${application.status}).` });
+    }
+
+    const newStatus = decision === "ACCEPT" ? "HIRED" : "DECLINED";
+    const updated = await prisma.application.update({
+      where: { id: applicationId },
+      data: { status: newStatus },
+    });
+
+    await createNotification(
+      application.job.recruiterId,
+      decision === "ACCEPT" ? "Offer Accepted 🎉" : "Offer Declined",
+      `Candidate ${decision === "ACCEPT" ? "accepted" : "declined"} your offer for "${application.job.title}".`
+    );
+
+    await prisma.activityLog.create({
+      data: {
+        action: decision === "ACCEPT" ? "OFFER_ACCEPTED" : "OFFER_DECLINED",
+        details: `Candidate responded ${decision} to offer for "${application.job.title}"`,
+        userId: req.user.id,
+      },
+    });
+
+    res.status(200).json({ message: `Offer ${decision === "ACCEPT" ? "accepted" : "declined"} successfully`, application: updated });
+  } catch (error) {
+    console.error("Offer response error:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const bulkUpdateStatus = async (req, res) => {
   try {
     const { applicationIds, stage } = req.body;
@@ -622,5 +673,6 @@ module.exports = {
   scheduleInterview,
   generateOfferLetter,
   downloadOfferLetter,
+  respondToOffer,
   bulkUpdateStatus,
 };

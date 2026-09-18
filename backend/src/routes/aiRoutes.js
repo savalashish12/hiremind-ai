@@ -9,6 +9,7 @@ const {
   compareTwoCandidates,
   getResumeSuggestions,
   getCareerRoadmap,
+  generateSummary,
   getAIJobRecommendations,
   uploadCompanyDocument,
   getCompanyDocuments,
@@ -65,6 +66,14 @@ router.post(
 );
 
 // Candidate AI tools
+router.post(
+  "/generate-summary",
+  protect,
+  authorizeRoles("CANDIDATE"),
+  sanitizeInput,
+  generateSummary
+);
+
 router.get(
   "/resume-suggestions",
   protect,
