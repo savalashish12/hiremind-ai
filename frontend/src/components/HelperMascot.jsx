@@ -16,8 +16,8 @@ const TIPS = [
 ];
 
 const QUICK_LINKS = [
-  { to: "/candidate-dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/candidate/ats", label: "ATS Scanner", icon: Sparkles },
+  { to: "/candidate/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/candidate/ats-score", label: "ATS Scanner", icon: Sparkles },
   { to: "/candidate/resume-builder", label: "Resume Builder", icon: FileText },
   { to: "/candidate/saved-jobs", label: "Saved Jobs", icon: Bookmark },
   { to: "/candidate/mock-interview", label: "Mock Interview", icon: Brain },

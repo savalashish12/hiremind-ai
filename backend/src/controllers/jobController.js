@@ -98,8 +98,12 @@ const getAllJobs = async (req, res) => {
       where,
       skip,
       take: limit,
-      include: {
-        recruiter: true,
+      select: {
+        id: true, title: true, description: true, location: true,
+        salary: true, jobType: true, skillsRequired: true, status: true,
+        createdAt: true, recruiterId: true,
+        recruiter: { select: { id: true, fullName: true, recruiterProfile: true, companyProfile: true } },
+        _count: { select: { applications: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -372,6 +376,26 @@ const deleteJob = async (req, res) => {
   }
 };
 
+const getJobById = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+    const job = await prisma.job.findUnique({
+      where: { id: jobId },
+      select: {
+        id: true, title: true, description: true, location: true,
+        salary: true, jobType: true, skillsRequired: true, status: true,
+        createdAt: true, recruiterId: true,
+        recruiter: { select: { id: true, fullName: true, email: true, recruiterProfile: true, companyProfile: true } },
+        _count: { select: { applications: true } },
+      },
+    });
+    if (!job) return res.status(404).json({ message: "Job not found" });
+    res.status(200).json(job);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const getExternalJobs = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -440,6 +464,7 @@ const getExternalJobs = async (req, res) => {
 module.exports = {
   createJob,
   getAllJobs,
+  getJobById,
   getExternalJobs,
   getJobApplicants,
   getRecruiterJobs,

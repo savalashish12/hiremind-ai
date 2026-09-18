@@ -95,7 +95,7 @@ const AtsScoreDashboard = () => {
         <div className="text-center py-20 bg-slate-800/40 rounded-3xl border border-slate-700/80">
           <p className="text-slate-400 mb-4">Please upload your resume in the Candidate Dashboard before running ATS analysis.</p>
           <a
-            href="/candidate-dashboard"
+            href="/candidate/dashboard"
             className="bg-blue-600 hover:bg-blue-700 font-bold px-6 py-2.5 rounded-xl transition-all block w-fit mx-auto"
           >
             Go to Dashboard

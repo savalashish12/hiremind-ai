@@ -8,6 +8,7 @@ const authorizeRoles = require('../middleware/roleMiddleware');
 const {
   createJob,
   getAllJobs,
+  getJobById,
   getExternalJobs,
   getJobApplicants,
   getRecruiterJobs,
@@ -52,6 +53,14 @@ router.get(
   protect,
   authorizeRoles('RECRUITER'),
   getJobApplicants
+);
+
+// Public single-job detail (shareable Naukri-style URL).
+// Kept AFTER all literal GET routes (/external, /my-jobs, /analytics/...)
+// so they are not shadowed by the :jobId param.
+router.get(
+  '/:jobId',
+  getJobById
 );
 
 router.put(

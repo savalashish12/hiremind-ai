@@ -307,7 +307,7 @@ const Navbar = () => {
                         {user.role === "RECRUITER" && (
                           <>
                             <Link
-                              to="/recruiter-dashboard"
+                              to="/recruiter/dashboard"
                               onClick={() => setShowUserDropdown(false)}
                               className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition-all"
                             >
@@ -328,7 +328,7 @@ const Navbar = () => {
                         {user.role === "CANDIDATE" && (
                           <>
                             <Link
-                              to="/candidate-dashboard"
+                              to="/candidate/dashboard"
                               onClick={() => setShowUserDropdown(false)}
                               className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition-all"
                             >
@@ -344,7 +344,7 @@ const Navbar = () => {
                               My Career Portfolio
                             </Link>
                             <Link
-                              to="/candidate/ats"
+                              to="/candidate/ats-score"
                               onClick={() => setShowUserDropdown(false)}
                               className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition-all"
                             >
@@ -379,14 +379,24 @@ const Navbar = () => {
                         )}
 
                         {user.role === "ADMIN" && (
-                          <Link
-                            to="/admin-dashboard"
-                            onClick={() => setShowUserDropdown(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition-all"
-                          >
-                            <LayoutDashboard size={14} />
-                            Admin Console
-                          </Link>
+                          <>
+                            <Link
+                              to="/admin/dashboard"
+                              onClick={() => setShowUserDropdown(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition-all"
+                            >
+                              <LayoutDashboard size={14} />
+                              Admin Console
+                            </Link>
+                            <Link
+                              to="/admin/users"
+                              onClick={() => setShowUserDropdown(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-800 hover:text-white transition-all"
+                            >
+                              <User size={14} />
+                              Manage Users
+                            </Link>
+                          </>
                         )}
 
                         <Link
@@ -470,18 +480,23 @@ const Navbar = () => {
                   <>
                     {user.role === "CANDIDATE" && (
                       <>
-                        <Link to="/candidate-dashboard" className="text-center py-2 rounded-xl bg-slate-900">Dashboard</Link>
+                        <Link to="/candidate/dashboard" className="text-center py-2 rounded-xl bg-slate-900">Dashboard</Link>
+                        <Link to="/candidate/jobs" className="text-center py-2 rounded-xl bg-slate-900">Jobs</Link>
                         <Link to="/candidate/portfolio" className="text-center py-2 rounded-xl bg-slate-900">Portfolio</Link>
                       </>
                     )}
                     {user.role === "RECRUITER" && (
                       <>
-                        <Link to="/recruiter-dashboard" className="text-center py-2 rounded-xl bg-slate-900">Dashboard</Link>
+                        <Link to="/recruiter/dashboard" className="text-center py-2 rounded-xl bg-slate-900">Dashboard</Link>
+                        <Link to="/recruiter/jobs" className="text-center py-2 rounded-xl bg-slate-900">My Jobs</Link>
                         <Link to="/recruiter/company-profile" className="text-center py-2 rounded-xl bg-slate-900">Company Profile</Link>
                       </>
                     )}
                     {user.role === "ADMIN" && (
-                      <Link to="/admin-dashboard" className="text-center py-2 rounded-xl bg-slate-900">Admin Console</Link>
+                      <>
+                        <Link to="/admin/dashboard" className="text-center py-2 rounded-xl bg-slate-900">Admin Console</Link>
+                        <Link to="/admin/users" className="text-center py-2 rounded-xl bg-slate-900">Users</Link>
+                      </>
                     )}
                     <button
                       onClick={handleLogout}

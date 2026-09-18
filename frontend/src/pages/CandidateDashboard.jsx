@@ -571,7 +571,7 @@ const CandidateDashboard = () => {
               </p>
             </div>
             <div className="text-[9px] text-slate-500 self-end">
-              <Link to="/candidate/ats" className="text-blue-400 font-bold hover:underline">ATS Optimizer →</Link>
+              <Link to="/candidate/ats-score" className="text-blue-400 font-bold hover:underline">ATS Optimizer →</Link>
             </div>
           </motion.div>
 

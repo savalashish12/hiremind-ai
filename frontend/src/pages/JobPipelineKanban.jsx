@@ -129,7 +129,7 @@ const JobPipelineKanban = () => {
           </span>
         )}
         <div className="hidden group-hover:flex gap-1 mt-2 pt-2 border-t border-slate-700/50">
-          <a href={`/applicants/${app.jobId}`}
+          <a href={`/recruiter/applicants/${app.jobId}`}
             onClick={e => e.stopPropagation()}
             className="flex-1 text-center text-[10px] py-1.5 bg-slate-700 hover:bg-slate-600 rounded-lg text-slate-300 transition-colors">
             View Profile
@@ -151,7 +151,7 @@ const JobPipelineKanban = () => {
           </p>
         </div>
         <a
-          href={`/applicants/${jobId}`}
+          href={`/recruiter/applicants/${jobId}`}
           className="bg-slate-800 hover:bg-slate-700 font-bold px-6 py-2.5 rounded-xl border border-slate-700 text-xs transition-all"
         >
           ◀ Standard Applicants View

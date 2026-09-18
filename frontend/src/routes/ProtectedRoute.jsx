@@ -1,4 +1,4 @@
-import { Navigate }
+import { Navigate, useLocation }
 from "react-router-dom";
 
 import { useContext }
@@ -15,11 +15,12 @@ const ProtectedRoute = ({
 
   const { user } =
     useContext(AuthContext);
+  const location = useLocation();
 
   if (!user) {
 
     return (
-      <Navigate to="/login" />
+      <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`} replace />
     );
   }
 
@@ -29,7 +30,7 @@ const ProtectedRoute = ({
   ) {
 
     return (
-      <Navigate to="/" />
+      <Navigate to="/" replace />
     );
   }
 

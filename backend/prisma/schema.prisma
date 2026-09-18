@@ -110,6 +110,10 @@ model Job {
 
   applications Application[]
   savedJobs    SavedJob[]
+
+  @@index([status])
+  @@index([recruiterId])
+  @@index([createdAt])
 }
 
 model Application {
@@ -139,6 +143,7 @@ model Application {
   @@index([candidateId])
   @@index([jobId])
   @@index([status])
+  @@index([pipelineStage])
 }
 
 model SavedJob {
@@ -243,6 +248,7 @@ model ExternalJob {
   @@index([company])
   @@index([location])
   @@index([postedDate])
+  @@index([isActive])
 }
 
 model ActivityLog {

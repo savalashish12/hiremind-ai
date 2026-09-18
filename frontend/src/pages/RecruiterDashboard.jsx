@@ -311,7 +311,7 @@ const RecruiterDashboard = () => {
                         {/* Control buttons */}
                         <div className="flex gap-2">
                           <button
-                            onClick={() => navigate(`/applicants/${job.id}`)}
+                            onClick={() => navigate(`/recruiter/applicants/${job.id}`)}
                             className="flex-1 bg-blue-600 hover:bg-blue-500 text-white font-bold py-2 rounded-xl text-xs transition-colors cursor-pointer"
                           >
                             View Applicants

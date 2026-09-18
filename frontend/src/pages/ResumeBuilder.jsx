@@ -211,7 +211,7 @@ const ResumeBuilder = () => {
       const res = await API.post('/candidate/build-resume', formattedData);
       if (res.data.resumeUrl) {
         toast.success('Resume compiled and saved successfully!');
-        navigate('/candidate-dashboard');
+        navigate('/candidate/dashboard');
       } else {
         toast.error('Failed to compile resume');
       }
@@ -233,7 +233,7 @@ const ResumeBuilder = () => {
         <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-800 flex-wrap gap-4">
           <div className="flex items-center gap-3">
             <button
-              onClick={() => navigate('/candidate-dashboard')}
+              onClick={() => navigate('/candidate/dashboard')}
               className="p-2 bg-slate-905 hover:bg-slate-800 rounded-xl border border-slate-800 transition-colors"
             >
               <ArrowLeft size={16} />

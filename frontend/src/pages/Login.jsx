@@ -1,12 +1,13 @@
 import { useState, useContext, useEffect } from "react";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Eye, EyeOff, Sparkles, Brain, FileText, Target, ChevronRight, Users } from 'lucide-react';
 import API from "../services/api";
 import { AuthContext } from "../context/AuthContext";
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login } = useContext(AuthContext);
 
   const [formData, setFormData] = useState({
@@ -42,10 +43,15 @@ const Login = () => {
       setIsLoading(true);
       const res = await API.post("/auth/login", formData);
       login(res.data.user, res.data.token);
-      if (res.data.user.role === "RECRUITER") {
-        navigate("/recruiter-dashboard");
+      const redirect = searchParams.get("redirect");
+      if (redirect) {
+        navigate(redirect);
+      } else if (res.data.user.role === "RECRUITER") {
+        navigate("/recruiter/dashboard");
+      } else if (res.data.user.role === "ADMIN") {
+        navigate("/admin/dashboard");
       } else {
-        navigate("/candidate-dashboard");
+        navigate("/candidate/dashboard");
       }
     } catch (error) {
       console.error("Login failed:", error);

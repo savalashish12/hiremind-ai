@@ -26,23 +26,32 @@ const CommandPalette = () => {
   };
 
   const candidateItems = [
-    { icon: <LayoutDashboard size={14}/>, label: 'My Dashboard', action: () => go('/candidate-dashboard') },
-    { icon: <Briefcase size={14}/>, label: 'Browse Jobs', action: () => go('/jobs') },
-    { icon: <Target size={14}/>, label: 'ATS Score', action: () => go('/candidate/ats') },
+    { icon: <LayoutDashboard size={14}/>, label: 'My Dashboard', action: () => go('/candidate/dashboard') },
+    { icon: <Briefcase size={14}/>, label: 'Browse Jobs', action: () => go('/candidate/jobs') },
+    { icon: <FileText size={14}/>, label: 'My Applications', action: () => go('/candidate/applications') },
+    { icon: <Target size={14}/>, label: 'ATS Score', action: () => go('/candidate/ats-score') },
     { icon: <Brain size={14}/>, label: 'Mock Interview', action: () => go('/candidate/mock-interview') },
     { icon: <BookmarkCheck size={14}/>, label: 'Saved Jobs', action: () => go('/candidate/saved-jobs') },
     { icon: <User size={14}/>, label: 'My Portfolio', action: () => go('/candidate/portfolio') },
     { icon: <FileText size={14}/>, label: 'Resume Builder', action: () => go('/candidate/resume-builder') },
+    { icon: <FileText size={14}/>, label: 'Career Roadmap', action: () => go('/candidate/career-roadmap') },
   ];
 
   const recruiterItems = [
-    { icon: <LayoutDashboard size={14}/>, label: 'Recruiter Dashboard', action: () => go('/recruiter-dashboard') },
-    { icon: <Briefcase size={14}/>, label: 'Browse All Jobs', action: () => go('/jobs') },
+    { icon: <LayoutDashboard size={14}/>, label: 'Recruiter Dashboard', action: () => go('/recruiter/dashboard') },
+    { icon: <Briefcase size={14}/>, label: 'My Jobs', action: () => go('/recruiter/jobs') },
+    { icon: <Briefcase size={14}/>, label: 'Post Job', action: () => go('/recruiter/post-job') },
+    { icon: <BarChart2 size={14}/>, label: 'Analytics', action: () => go('/recruiter/analytics') },
     { icon: <BarChart2 size={14}/>, label: 'Company Profile', action: () => go('/recruiter/company-profile') },
+    { icon: <Brain size={14}/>, label: 'AI Chatbot', action: () => go('/recruiter/chatbot') },
+    { icon: <Briefcase size={14}/>, label: 'Browse All Jobs', action: () => go('/jobs') },
   ];
 
   const adminItems = [
-    { icon: <Users size={14}/>, label: 'Manage Users', action: () => go('/admin-dashboard') },
+    { icon: <LayoutDashboard size={14}/>, label: 'Admin Overview', action: () => go('/admin/dashboard') },
+    { icon: <Users size={14}/>, label: 'Manage Users', action: () => go('/admin/users') },
+    { icon: <Briefcase size={14}/>, label: 'Manage Jobs', action: () => go('/admin/jobs') },
+    { icon: <FileText size={14}/>, label: 'Activity Log', action: () => go('/admin/activity-log') },
   ];
 
   const publicItems = [

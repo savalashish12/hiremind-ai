@@ -10,10 +10,10 @@ const NotFound = () => {
   const dashboardPath = !user
     ? "/login"
     : user.role === "RECRUITER"
-      ? "/recruiter-dashboard"
+      ? "/recruiter/dashboard"
       : user.role === "ADMIN"
-        ? "/admin-dashboard"
-        : "/candidate-dashboard";
+        ? "/admin/dashboard"
+        : "/candidate/dashboard";
 
   return (
     <div className="min-h-[80vh] flex flex-col items-center justify-center text-center p-8 text-slate-100">
